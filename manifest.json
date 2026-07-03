@@ -1,0 +1,51 @@
+{
+  "manifest_version": 2,
+  "name": "YT Focus",
+  "version": "3.0",
+  "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter.",
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png"
+    },
+    "default_title": "YT Focus"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "*://www.youtube.com/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "yt-focus@local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ],
+        "optional": []
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
+    }
+  }
+}

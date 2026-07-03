@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 280px;
+      background: #0f0f0f;
+      color: #f1f1f1;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding-bottom: 12px;
+    }
+
+    header {
+      background: #ff0000;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    header h1 { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    header p  { font-size: 10px; color: rgba(255,255,255,0.75); margin-top: 1px; }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #555;
+      padding: 10px 16px 4px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 16px;
+      border-bottom: 1px solid #1a1a1a;
+      cursor: pointer;
+      transition: background 0.12s;
+      gap: 12px;
+    }
+    .toggle-row:hover { background: #181818; }
+
+    .toggle-info strong { display: block; font-size: 12px; font-weight: 600; }
+    .toggle-info span   { font-size: 10px; color: #666; margin-top: 1px; display: block; }
+
+    .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #2e2e2e;
+      border-radius: 20px;
+      transition: background 0.18s;
+      cursor: pointer;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: #888;
+      border-radius: 50%;
+      transition: transform 0.18s, background 0.18s;
+    }
+    input:checked + .slider { background: #ff0000; }
+    input:checked + .slider::before { transform: translateX(16px); background: #fff; }
+
+    footer {
+      padding: 10px 16px 0;
+      font-size: 10px;
+      color: #333;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+    <rect width="26" height="26" rx="5" fill="rgba(255,255,255,0.15)"/>
+    <polygon points="9,6 21,13 9,20" fill="white"/>
+  </svg>
+  <div>
+    <h1>YT Focus</h1>
+    <p>Watch without the noise</p>
+  </div>
+</header>
+
+<div class="section-label">Video Page</div>
+
+<div class="toggle-row" data-key="blockSidebar">
+  <div class="toggle-info">
+    <strong>Recommended Sidebar</strong>
+    <span>Hides the "Up next" feed</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockSidebar"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockComments">
+  <div class="toggle-info">
+    <strong>Comments</strong>
+    <span>Removes the entire comments section</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockComments"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockActions">
+  <div class="toggle-info">
+    <strong>Action Bar</strong>
+    <span>Like, dislike, share, ask, save</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockActions"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockDescription">
+  <div class="toggle-info">
+    <strong>Description & Ask</strong>
+    <span>Description box, Ask panel, chapters</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockDescription"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="section-label">Home Feed</div>
+
+<div class="toggle-row" data-key="blockShorts">
+  <div class="toggle-info">
+    <strong>Shorts</strong>
+    <span>Shelves, nav link, search results</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockShorts"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockShelves">
+  <div class="toggle-info">
+    <strong>Topic Shelves</strong>
+    <span>"Explore more topics", AI Ask panel</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockShelves"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockChips">
+  <div class="toggle-info">
+    <strong>Filter Bar</strong>
+    <span>Podcasts, Gaming, News… chips</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockChips"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="section-label">Navigation</div>
+
+<div class="toggle-row" data-key="blockLeftNav">
+  <div class="toggle-info">
+    <strong>Left Sidebar Clutter</strong>
+    <span>Hides You, History, Subscriptions list…</span>
+  </div>
+  <label class="switch" onclick="event.stopPropagation()">
+    <input type="checkbox" id="blockLeftNav"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<footer>Changes apply instantly on YouTube tabs</footer>
+<script src="popup.js"></script>
+</body>
+</html>
