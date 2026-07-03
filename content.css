@@ -1,0 +1,162 @@
+/* ══════════════════════════════════════════════════
+   YT Focus v3 — CSS rules
+   Toggle-controlled rules gated by data-ytf-* attrs.
+   Always-on rules are unscoped (no attr gate).
+   ══════════════════════════════════════════════════ */
+
+
+/* ═══════════════════════════════
+   TOGGLE-CONTROLLED (data-ytf-*)
+   ═══════════════════════════════ */
+
+/* ── Shorts ── */
+html[data-ytf-shorts] ytd-rich-shelf-renderer[is-shorts],
+html[data-ytf-shorts] ytd-reel-shelf-renderer,
+html[data-ytf-shorts] ytd-reel-item-renderer,
+html[data-ytf-shorts] ytd-video-renderer[is-shorts],
+html[data-ytf-shorts] ytd-shorts,
+html[data-ytf-shorts] ytd-guide-entry-renderer:has(a[href="/shorts"]),
+html[data-ytf-shorts] ytd-mini-guide-entry-renderer:has(a[href="/shorts"]),
+html[data-ytf-shorts] ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html[data-ytf-shorts] ytd-guide-entry-renderer:has(yt-icon[icon="shorts"]),
+html[data-ytf-shorts] ytd-mini-guide-entry-renderer:has(yt-icon[icon="shorts"]) {
+  display: none !important;
+}
+
+/* ── Right sidebar / recommendations ── */
+html[data-ytf-sidebar] #secondary,
+html[data-ytf-sidebar] #related {
+  display: none !important;
+}
+html[data-ytf-sidebar] ytd-watch-flexy #primary.ytd-watch-flexy {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+}
+
+/* ── Comments ── */
+html[data-ytf-comments] #comments,
+html[data-ytf-comments] ytd-comments {
+  display: none !important;
+}
+
+/* ── Action bar (like/dislike/share/save) ── */
+html[data-ytf-actions] ytd-video-primary-info-renderer #actions,
+html[data-ytf-actions] ytd-watch-metadata #actions,
+html[data-ytf-actions] #below ytd-video-primary-info-renderer #actions,
+html[data-ytf-actions] ytd-reel-video-renderer #actions,
+html[data-ytf-actions] ytd-watch-metadata ytd-menu-renderer,
+html[data-ytf-actions] ytd-video-primary-info-renderer ytd-menu-renderer {
+  display: none !important;
+}
+
+/* ── Description, Ask panel, chapters, transcript ── */
+/* All scoped to watch page to avoid hitting channel About sections */
+html[data-ytf-description] ytd-watch-flexy #description,
+html[data-ytf-description] ytd-watch-flexy #structured-description,
+html[data-ytf-description] ytd-watch-flexy ytd-text-inline-expander,
+html[data-ytf-description] ytd-watch-flexy ytd-structured-description-content-renderer,
+html[data-ytf-description] ytd-watch-flexy ytd-video-description-infocards-section-renderer,
+html[data-ytf-description] ytd-watch-flexy ytd-video-description-transcript-section-renderer {
+  display: none !important;
+}
+
+/* ── Topic shelves & AI Ask panel ── */
+html[data-ytf-shelves] ytd-rich-shelf-renderer:not([is-shorts]),
+html[data-ytf-shelves] ytd-rich-section-renderer {
+  display: none !important;
+}
+
+/* ── Filter chips bar ── */
+html[data-ytf-chips] #chips-wrapper,
+html[data-ytf-chips] ytd-feed-filter-chip-bar-renderer {
+  display: none !important;
+}
+
+/* ── Left sidebar clutter ── */
+html[data-ytf-leftnav] ytd-guide-section-renderer:not(:first-child),
+html[data-ytf-leftnav] ytd-guide-collapsible-section-entry-renderer,
+html[data-ytf-leftnav] ytd-guide-renderer #guide-links-primary,
+html[data-ytf-leftnav] ytd-guide-renderer #guide-links-secondary,
+html[data-ytf-leftnav] ytd-guide-renderer .guide-footer {
+  display: none !important;
+}
+
+/* ── Mini guide: subscriptions & you ── */
+html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(a[href="/feed/subscriptions"]),
+html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(a[href="/feed/you"]),
+html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(yt-icon[icon="subscriptions"]),
+html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(yt-icon[icon="account_circle"]) {
+  display: none !important;
+}
+
+
+/* ═══════════════════════
+   ALWAYS ON (no toggle)
+   ═══════════════════════ */
+
+/* ── Top bar: voice search, create, notifications ── */
+#voice-search-button,
+ytd-topbar-menu-button-renderer,
+#masthead-container #buttons ytd-button-renderer,
+#masthead-container #buttons yt-icon-button {
+  display: none !important;
+}
+
+/* ── Hamburger menu button ── */
+#guide-button {
+  display: none !important;
+}
+
+/* ── Watch page: channel info below video ── */
+/* Scoped to watch page — bare #owner could match elsewhere */
+ytd-watch-flexy ytd-video-owner-renderer,
+ytd-watch-metadata #owner,
+ytd-watch-flexy #upload-info {
+  display: none !important;
+}
+
+/* ── Channel page: hide Shorts, Posts, Store tabs ── */
+yt-tab-shape[tab-title="Shorts"],
+yt-tab-shape[tab-title="Posts"],
+yt-tab-shape[tab-title="Store"],
+tp-yt-paper-tab:has(> div[tab-title="Shorts"]),
+tp-yt-paper-tab:has(> div[tab-title="Posts"]),
+tp-yt-paper-tab:has(> div[tab-title="Store"]),
+[tab-title="Shorts"],
+[tab-title="Posts"],
+[tab-title="Store"] {
+  display: none !important;
+}
+
+/* ── Channel page: recognition/featured shelves ── */
+ytd-recognition-shelf-renderer,
+ytd-channel-video-player-renderer,
+ytd-branded-page-v2-secondary-column-renderer {
+  display: none !important;
+}
+
+/* ── Channel page: about dialog/panel ── */
+ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"],
+ytd-about-channel-renderer,
+tp-yt-paper-dialog:has(ytd-about-channel-renderer) {
+  display: none !important;
+}
+
+/* ── Channel page: banner ── */
+ytd-c4-tabbed-header-renderer #banner-container,
+ytd-c4-tabbed-header-renderer .banner-visible-area,
+yt-image-banner-view-model,
+#page-header-banner,
+ytd-page-header-renderer .page-header-banner {
+  display: none !important;
+}
+
+/* ── Channel page: metadata (avatar, handle, sub count, description, subscribe) ── */
+/* Preserved: tab bar for navigation */
+yt-page-header-view-model,
+yt-channel-tagline-view-model,
+#channel-tagline,
+ytd-c4-tabbed-header-renderer #channel-header,
+ytd-c4-tabbed-header-renderer #channel-header-container {
+  display: none !important;
+}
