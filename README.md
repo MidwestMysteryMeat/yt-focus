@@ -4,6 +4,9 @@ Firefox extension that strips the noise out of YouTube: Shorts, comments,
 recommendations, action bars, channel-page clutter — each behind a toggle
 in the toolbar popup, applied instantly to every open YouTube tab.
 
+**Repo:** [github.com/MidwestMysteryMeat/yt-focus](https://github.com/MidwestMysteryMeat/yt-focus)
+· by [@MidwestMysteryMeat](https://github.com/MidwestMysteryMeat)
+
 ## Features
 
 **Master switch** in the popup header pauses/resumes everything at once
