@@ -1,15 +1,4 @@
-// YT Focus v3 — content script
-
-const DEFAULTS = {
-  blockShorts:      true,
-  blockSidebar:     true,
-  blockComments:    true,
-  blockActions:     true,
-  blockDescription: true,
-  blockShelves:     true,
-  blockChips:       true,
-  blockLeftNav:     true,
-};
+// YT Focus — content script (DEFAULTS comes from defaults.js, loaded first)
 
 // Maps setting keys → data attributes on <html>
 const ATTR_MAP = {
@@ -21,6 +10,10 @@ const ATTR_MAP = {
   blockShelves:     'data-ytf-shelves',
   blockChips:       'data-ytf-chips',
   blockLeftNav:     'data-ytf-leftnav',
+  blockAds:         'data-ytf-ads',
+  blockEndscreen:   'data-ytf-endscreen',
+  blockMerch:       'data-ytf-merch',
+  blockHomeFeed:    'data-ytf-homefeed',
 };
 
 // ── Toggle-controlled JS rules ──
@@ -60,7 +53,14 @@ const JS_RULES = {
     ].join(','),
   },
   blockShelves: {
-    selector: 'ytd-rich-shelf-renderer:not([is-shorts]),ytd-rich-section-renderer',
+    selector: [
+      'ytd-rich-shelf-renderer:not([is-shorts])',
+      'ytd-rich-section-renderer',
+      // Search results: "People also watched", "For you", card carousels
+      'ytd-search ytd-shelf-renderer',
+      'ytd-search ytd-horizontal-card-list-renderer',
+      'ytd-secondary-search-container-renderer',
+    ].join(','),
   },
   blockChips: {
     selector: '#chips-wrapper,ytd-feed-filter-chip-bar-renderer',
@@ -72,6 +72,37 @@ const JS_RULES = {
       '#guide-links-secondary',
     ].join(','),
     hideGuideSections: true,
+  },
+  blockAds: {
+    selector: [
+      '#masthead-ad',
+      '#player-ads',
+      'ytd-ad-slot-renderer',
+      'ytd-in-feed-ad-layout-renderer',
+      'ytd-display-ad-renderer',
+      'ytd-promoted-sparkles-web-renderer',
+      'ytd-banner-promo-renderer',
+    ].join(','),
+  },
+  blockEndscreen: {
+    selector: [
+      '.ytp-endscreen-content',
+      '.ytp-ce-element',
+      '.ytp-cards-teaser',
+      '.ytp-cards-button',
+      '.ytp-suggested-action',
+    ].join(','),
+  },
+  blockMerch: {
+    selector: [
+      'ytd-merch-shelf-renderer',
+      'ytd-ticket-shelf-renderer',
+      'ytd-donation-shelf-renderer',
+      'ytd-post-renderer',
+    ].join(','),
+  },
+  blockHomeFeed: {
+    selector: 'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer',
   },
 };
 
@@ -116,14 +147,13 @@ const BLOCKED_TAB_LABELS = ['shorts', 'posts', 'store'];
 let currentSettings = { ...DEFAULTS };
 
 // ── Apply data attributes to <html> so CSS rules activate/deactivate ──
+// data-ytf-on gates the always-on CSS; per-feature attrs gate their rules.
+// Master switch off ⇒ no attrs at all ⇒ every CSS rule goes inert.
 function applyAttrs() {
   const root = document.documentElement;
+  root.toggleAttribute('data-ytf-on', !!currentSettings.enabled);
   for (const [key, attr] of Object.entries(ATTR_MAP)) {
-    if (currentSettings[key]) {
-      root.setAttribute(attr, '');
-    } else {
-      root.removeAttribute(attr);
-    }
+    root.toggleAttribute(attr, !!(currentSettings.enabled && currentSettings[key]));
   }
 }
 
@@ -138,26 +168,53 @@ function showEl(el) {
   if (el) el.style.removeProperty('display');
 }
 
+// ── Ad skipper ──
+// Cosmetic hiding can't remove video ads (they're part of the stream),
+// so when the player enters ad-showing state: jump to the ad's end and
+// click Skip as soon as it exists. No mute/rate changes — nothing to
+// restore when the real video resumes.
+function skipVideoAd() {
+  if (!currentSettings.enabled || !currentSettings.blockAds) return;
+  const player = document.querySelector('#movie_player.ad-showing');
+  if (!player) return;
+  const video = player.querySelector('video');
+  if (video && isFinite(video.duration) && video.duration > 0) {
+    video.currentTime = video.duration;
+  }
+  player.querySelector(
+    '.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern'
+  )?.click();
+}
+
 // ── Main scrub ──
 function scrub() {
+  const on = currentSettings.enabled;
+
   // ─ Always-on: selector-based ─
-  document.querySelectorAll(ALWAYS_HIDE_SELECTOR).forEach(hideEl);
+  document.querySelectorAll(ALWAYS_HIDE_SELECTOR).forEach(on ? hideEl : showEl);
 
   // ─ Always-on: channel shelf titles (text-matched) ─
-  document.querySelectorAll('ytd-shelf-renderer, ytd-item-section-renderer').forEach(shelf => {
+  // Scoped to channel pages: in search results the wrapping
+  // ytd-item-section-renderer holds ALL results, and a "For you" shelf
+  // title inside it would otherwise hide the entire results list.
+  document.querySelectorAll(
+    'ytd-browse[page-subtype="channels"] ytd-shelf-renderer, ytd-browse[page-subtype="channels"] ytd-item-section-renderer'
+  ).forEach(shelf => {
     const title = (shelf.querySelector('#title, #title-text, h2')?.textContent || '').trim().toLowerCase();
-    if (BLOCKED_SHELF_TITLES.some(b => title.includes(b))) hideEl(shelf);
+    if (BLOCKED_SHELF_TITLES.some(b => title.includes(b))) (on ? hideEl : showEl)(shelf);
   });
 
   // ─ Always-on: channel tabs (text-matched) ─
   document.querySelectorAll('yt-tab-shape, tp-yt-paper-tab').forEach(tab => {
     const label = (tab.getAttribute('tab-title') || tab.textContent || '').trim().toLowerCase();
-    if (BLOCKED_TAB_LABELS.includes(label)) hideEl(tab);
+    if (BLOCKED_TAB_LABELS.includes(label)) (on ? hideEl : showEl)(tab);
   });
+
+  skipVideoAd();
 
   // ─ Toggle-controlled: rule-based ─
   for (const [key, rule] of Object.entries(JS_RULES)) {
-    const active = currentSettings[key];
+    const active = on && currentSettings[key];
 
     if (rule.selector) {
       document.querySelectorAll(rule.selector).forEach(el => {
@@ -185,7 +242,7 @@ function scrub() {
     const text = (entry.querySelector('yt-formatted-string, span')?.textContent || '').trim().toLowerCase();
 
     for (const rule of NAV_RULES) {
-      const active = currentSettings[rule.key];
+      const active = on && currentSettings[rule.key];
       const match =
         rule.hrefs.some(h => href === h || href.startsWith(h + '/')) ||
         rule.texts.includes(text);
@@ -221,7 +278,7 @@ function startObserver() {
 // Only runs after settings load, so a disabled toggle is respected.
 let settingsLoaded = false;
 function redirectShorts() {
-  if (!settingsLoaded || !currentSettings.blockShorts) return;
+  if (!settingsLoaded || !currentSettings.enabled || !currentSettings.blockShorts) return;
   const m = location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]+)/);
   if (m) location.replace('/watch?v=' + m[1]);
 }

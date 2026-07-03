@@ -1,15 +1,11 @@
-const DEFAULTS = {
-  blockShorts:      true,
-  blockSidebar:     true,
-  blockComments:    true,
-  blockActions:     true,
-  blockDescription: true,
-  blockShelves:     true,
-  blockChips:       true,
-  blockLeftNav:     true,
-};
-
+// DEFAULTS comes from defaults.js (loaded first in popup.html)
 const keys = Object.keys(DEFAULTS);
+
+// Dim the feature rows while the master switch is off
+function updatePausedState() {
+  const master = document.getElementById('enabled');
+  document.body.classList.toggle('paused', !(master && master.checked));
+}
 
 // Load saved settings into checkboxes
 browser.storage.local.get(DEFAULTS).then(settings => {
@@ -17,6 +13,7 @@ browser.storage.local.get(DEFAULTS).then(settings => {
     const el = document.getElementById(key);
     if (el) el.checked = !!settings[key];
   });
+  updatePausedState();
 });
 
 function save() {
@@ -28,6 +25,7 @@ function save() {
 
   // Content scripts pick this up via storage.onChanged — no messaging needed
   browser.storage.local.set(settings);
+  updatePausedState();
 }
 
 // Click anywhere on a row to toggle — except on the switch itself,
