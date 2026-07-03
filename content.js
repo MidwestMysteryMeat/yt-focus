@@ -215,10 +215,22 @@ function startObserver() {
   observer.observe(document.documentElement, { childList: true, subtree: true });
 }
 
+// ── Shorts player redirect ──
+// The ytd-shorts player is hidden by CSS when blockShorts is on, which
+// would leave /shorts/<id> pages blank — send them to the normal player.
+// Only runs after settings load, so a disabled toggle is respected.
+let settingsLoaded = false;
+function redirectShorts() {
+  if (!settingsLoaded || !currentSettings.blockShorts) return;
+  const m = location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]+)/);
+  if (m) location.replace('/watch?v=' + m[1]);
+}
+
 // ── YouTube SPA navigation hook ──
 // Uses scheduleScrub for the early pass (deduplicates with observer),
 // direct scrub at 800ms to catch late-rendering elements.
 window.addEventListener('yt-navigate-finish', () => {
+  redirectShorts();
   scheduleScrub();
   setTimeout(scrub, 800);
 });
@@ -237,17 +249,21 @@ if (document.readyState !== 'loading') {
 // ── Load settings from storage ──
 browser.storage.local.get(DEFAULTS).then(settings => {
   currentSettings = { ...DEFAULTS, ...settings };
+  settingsLoaded = true;
   applyAttrs();
   scrub();
+  redirectShorts();
 });
 
-// ── Listen for live updates from popup ──
-browser.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'settingsUpdate' && msg.settings) {
-    currentSettings = { ...DEFAULTS, ...msg.settings };
-    applyAttrs();
-    scrub();
+// ── Live updates: fires in every YouTube tab when the popup saves ──
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  for (const [key, { newValue }] of Object.entries(changes)) {
+    if (key in DEFAULTS) currentSettings[key] = newValue;
   }
+  applyAttrs();
+  scrub();
+  redirectShorts();
 });
 
 // Apply attrs immediately with defaults (before storage resolves) to prevent flash

@@ -1,0 +1,4 @@
+dist/
+*.xpi
+*.zip
+web-ext-artifacts/
