@@ -26,19 +26,16 @@ function save() {
     settings[key] = el ? el.checked : DEFAULTS[key];
   });
 
+  // Content scripts pick this up via storage.onChanged — no messaging needed
   browser.storage.local.set(settings);
-
-  // Notify all open YouTube tabs so changes apply instantly
-  browser.tabs.query({ url: '*://www.youtube.com/*' }).then(tabs => {
-    tabs.forEach(tab => {
-      browser.tabs.sendMessage(tab.id, { type: 'settingsUpdate', settings }).catch(() => {});
-    });
-  });
 }
 
-// Click anywhere on a row to toggle
+// Click anywhere on a row to toggle — except on the switch itself,
+// where the checkbox toggles natively and fires the change listener.
+// (Inline stopPropagation handlers are blocked by extension-page CSP.)
 document.querySelectorAll('.toggle-row').forEach(row => {
-  row.addEventListener('click', () => {
+  row.addEventListener('click', (e) => {
+    if (e.target.closest('.switch')) return;
     const key = row.dataset.key;
     const checkbox = document.getElementById(key);
     if (checkbox) {
@@ -48,7 +45,7 @@ document.querySelectorAll('.toggle-row').forEach(row => {
   });
 });
 
-// Direct checkbox change (stopPropagation in HTML prevents double-fire)
+// Direct checkbox change
 keys.forEach(key => {
   const el = document.getElementById(key);
   if (el) el.addEventListener('change', save);
