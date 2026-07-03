@@ -68,6 +68,15 @@
     input:checked + .slider { background: #ff0000; }
     input:checked + .slider::before { transform: translateX(16px); background: #fff; }
 
+    /* Master switch sits on the red header, so red-on-red won't read */
+    header .slider { background: rgba(0,0,0,0.35); }
+    header input:checked + .slider { background: rgba(0,0,0,0.55); }
+    header input:checked + .slider::before { background: #fff; }
+
+    body.paused .section-label,
+    body.paused .toggle-row,
+    body.paused footer { opacity: 0.4; }
+
     footer {
       padding: 10px 16px 0;
       font-size: 10px;
@@ -83,10 +92,14 @@
     <rect width="26" height="26" rx="5" fill="rgba(255,255,255,0.15)"/>
     <polygon points="9,6 21,13 9,20" fill="white"/>
   </svg>
-  <div>
+  <div style="flex: 1">
     <h1>YT Focus</h1>
     <p>Watch without the noise</p>
   </div>
+  <label class="switch" title="Master switch — pause/resume everything">
+    <input type="checkbox" id="enabled"/>
+    <span class="slider"></span>
+  </label>
 </header>
 
 <div class="section-label">Video Page</div>
@@ -135,6 +148,28 @@
   </label>
 </div>
 
+<div class="toggle-row" data-key="blockEndscreen">
+  <div class="toggle-info">
+    <strong>End Screens & Cards</strong>
+    <span>Video-end wall, in-video teasers</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="blockEndscreen"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockAds">
+  <div class="toggle-info">
+    <strong>Ads</strong>
+    <span>Hides display ads, skips video ads</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="blockAds"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
 <div class="section-label">Home Feed</div>
 
 <div class="toggle-row" data-key="blockShorts">
@@ -170,6 +205,28 @@
   </label>
 </div>
 
+<div class="toggle-row" data-key="blockMerch">
+  <div class="toggle-info">
+    <strong>Merch & Posts</strong>
+    <span>Merch/ticket shelves, community posts</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="blockMerch"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="blockHomeFeed">
+  <div class="toggle-info">
+    <strong>Entire Home Feed</strong>
+    <span>Blank home page — search only</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="blockHomeFeed"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
 <div class="section-label">Navigation</div>
 
 <div class="toggle-row" data-key="blockLeftNav">
@@ -184,6 +241,7 @@
 </div>
 
 <footer>Changes apply instantly on YouTube tabs</footer>
+<script src="defaults.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

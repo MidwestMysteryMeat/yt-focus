@@ -62,7 +62,45 @@ html[data-ytf-description] ytd-watch-flexy ytd-video-description-transcript-sect
 
 /* ── Topic shelves & AI Ask panel ── */
 html[data-ytf-shelves] ytd-rich-shelf-renderer:not([is-shorts]),
-html[data-ytf-shelves] ytd-rich-section-renderer {
+html[data-ytf-shelves] ytd-rich-section-renderer,
+html[data-ytf-shelves] ytd-search ytd-shelf-renderer,
+html[data-ytf-shelves] ytd-search ytd-horizontal-card-list-renderer,
+html[data-ytf-shelves] ytd-secondary-search-container-renderer {
+  display: none !important;
+}
+
+/* ── Ads (display/in-feed — video ads handled by content.js skipper) ── */
+html[data-ytf-ads] #masthead-ad,
+html[data-ytf-ads] #player-ads,
+html[data-ytf-ads] ytd-ad-slot-renderer,
+html[data-ytf-ads] ytd-rich-item-renderer:has(ytd-ad-slot-renderer),
+html[data-ytf-ads] ytd-in-feed-ad-layout-renderer,
+html[data-ytf-ads] ytd-display-ad-renderer,
+html[data-ytf-ads] ytd-promoted-sparkles-web-renderer,
+html[data-ytf-ads] ytd-banner-promo-renderer {
+  display: none !important;
+}
+
+/* ── End screens & in-video cards ── */
+html[data-ytf-endscreen] .ytp-endscreen-content,
+html[data-ytf-endscreen] .ytp-ce-element,
+html[data-ytf-endscreen] .ytp-cards-teaser,
+html[data-ytf-endscreen] .ytp-cards-button,
+html[data-ytf-endscreen] .ytp-suggested-action {
+  display: none !important;
+}
+
+/* ── Merch shelves & community posts ── */
+html[data-ytf-merch] ytd-merch-shelf-renderer,
+html[data-ytf-merch] ytd-ticket-shelf-renderer,
+html[data-ytf-merch] ytd-donation-shelf-renderer,
+html[data-ytf-merch] ytd-post-renderer,
+html[data-ytf-merch] ytd-rich-item-renderer:has(ytd-post-renderer) {
+  display: none !important;
+}
+
+/* ── Entire home feed (opt-in blank homepage) ── */
+html[data-ytf-homefeed] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer {
   display: none !important;
 }
 
@@ -90,73 +128,75 @@ html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(yt-icon[icon="account_c
 }
 
 
-/* ═══════════════════════
-   ALWAYS ON (no toggle)
-   ═══════════════════════ */
+/* ═══════════════════════════════════════════════
+   ALWAYS ON (no per-feature toggle)
+   Gated by data-ytf-on so the master switch can
+   deactivate everything at once.
+   ═══════════════════════════════════════════════ */
 
 /* ── Top bar: voice search, create, notifications ── */
-#voice-search-button,
-ytd-topbar-menu-button-renderer,
-#masthead-container #buttons ytd-button-renderer,
-#masthead-container #buttons yt-icon-button {
+html[data-ytf-on] #voice-search-button,
+html[data-ytf-on] ytd-topbar-menu-button-renderer,
+html[data-ytf-on] #masthead-container #buttons ytd-button-renderer,
+html[data-ytf-on] #masthead-container #buttons yt-icon-button {
   display: none !important;
 }
 
 /* ── Hamburger menu button ── */
-#guide-button {
+html[data-ytf-on] #guide-button {
   display: none !important;
 }
 
 /* ── Watch page: channel info below video ── */
 /* Scoped to watch page — bare #owner could match elsewhere */
-ytd-watch-flexy ytd-video-owner-renderer,
-ytd-watch-metadata #owner,
-ytd-watch-flexy #upload-info {
+html[data-ytf-on] ytd-watch-flexy ytd-video-owner-renderer,
+html[data-ytf-on] ytd-watch-metadata #owner,
+html[data-ytf-on] ytd-watch-flexy #upload-info {
   display: none !important;
 }
 
 /* ── Channel page: hide Shorts, Posts, Store tabs ── */
-yt-tab-shape[tab-title="Shorts"],
-yt-tab-shape[tab-title="Posts"],
-yt-tab-shape[tab-title="Store"],
-tp-yt-paper-tab:has(> div[tab-title="Shorts"]),
-tp-yt-paper-tab:has(> div[tab-title="Posts"]),
-tp-yt-paper-tab:has(> div[tab-title="Store"]),
-[tab-title="Shorts"],
-[tab-title="Posts"],
-[tab-title="Store"] {
+html[data-ytf-on] yt-tab-shape[tab-title="Shorts"],
+html[data-ytf-on] yt-tab-shape[tab-title="Posts"],
+html[data-ytf-on] yt-tab-shape[tab-title="Store"],
+html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Shorts"]),
+html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Posts"]),
+html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Store"]),
+html[data-ytf-on] [tab-title="Shorts"],
+html[data-ytf-on] [tab-title="Posts"],
+html[data-ytf-on] [tab-title="Store"] {
   display: none !important;
 }
 
 /* ── Channel page: recognition/featured shelves ── */
-ytd-recognition-shelf-renderer,
-ytd-channel-video-player-renderer,
-ytd-branded-page-v2-secondary-column-renderer {
+html[data-ytf-on] ytd-recognition-shelf-renderer,
+html[data-ytf-on] ytd-channel-video-player-renderer,
+html[data-ytf-on] ytd-branded-page-v2-secondary-column-renderer {
   display: none !important;
 }
 
 /* ── Channel page: about dialog/panel ── */
-ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"],
-ytd-about-channel-renderer,
-tp-yt-paper-dialog:has(ytd-about-channel-renderer) {
+html[data-ytf-on] ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"],
+html[data-ytf-on] ytd-about-channel-renderer,
+html[data-ytf-on] tp-yt-paper-dialog:has(ytd-about-channel-renderer) {
   display: none !important;
 }
 
 /* ── Channel page: banner ── */
-ytd-c4-tabbed-header-renderer #banner-container,
-ytd-c4-tabbed-header-renderer .banner-visible-area,
-yt-image-banner-view-model,
-#page-header-banner,
-ytd-page-header-renderer .page-header-banner {
+html[data-ytf-on] ytd-c4-tabbed-header-renderer #banner-container,
+html[data-ytf-on] ytd-c4-tabbed-header-renderer .banner-visible-area,
+html[data-ytf-on] yt-image-banner-view-model,
+html[data-ytf-on] #page-header-banner,
+html[data-ytf-on] ytd-page-header-renderer .page-header-banner {
   display: none !important;
 }
 
 /* ── Channel page: metadata (avatar, handle, sub count, description, subscribe) ── */
 /* Preserved: tab bar for navigation */
-yt-page-header-view-model,
-yt-channel-tagline-view-model,
-#channel-tagline,
-ytd-c4-tabbed-header-renderer #channel-header,
-ytd-c4-tabbed-header-renderer #channel-header-container {
+html[data-ytf-on] yt-page-header-view-model,
+html[data-ytf-on] yt-channel-tagline-view-model,
+html[data-ytf-on] #channel-tagline,
+html[data-ytf-on] ytd-c4-tabbed-header-renderer #channel-header,
+html[data-ytf-on] ytd-c4-tabbed-header-renderer #channel-header-container {
   display: none !important;
 }

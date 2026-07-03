@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "3.1",
+  "version": "3.2",
   "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter.",
   "icons": {
     "48": "icons/icon48.png",
@@ -21,6 +21,7 @@
         "*://www.youtube.com/*"
       ],
       "js": [
+        "defaults.js",
         "content.js"
       ],
       "css": [
