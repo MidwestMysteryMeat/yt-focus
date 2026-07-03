@@ -75,7 +75,78 @@
 
     body.paused .section-label,
     body.paused .toggle-row,
+    body.paused .mute-row,
+    body.paused .chips,
     body.paused footer { opacity: 0.4; }
+
+    .mute-row, .backup-row {
+      display: flex;
+      gap: 6px;
+      padding: 6px 16px 0;
+    }
+    .mute-row input {
+      flex: 1;
+      min-width: 0;
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      color: #f1f1f1;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .mute-row input:focus { outline: 1px solid #ff0000; }
+    .mute-row button, .backup-row button {
+      background: #2e2e2e;
+      border: none;
+      color: #f1f1f1;
+      border-radius: 4px;
+      padding: 5px 12px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .mute-row button:hover, .backup-row button:hover { background: #3a3a3a; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 6px 16px 2px;
+    }
+    .chip {
+      background: #1f1f1f;
+      border: 1px solid #2e2e2e;
+      border-radius: 10px;
+      padding: 2px 6px 2px 9px;
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip-x {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+    }
+    .chip-x:hover { color: #ff4444; }
+
+    #backupBox {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 6px 16px 0;
+      height: 56px;
+      background: #1a1a1a;
+      border: 1px solid #2e2e2e;
+      color: #aaa;
+      font-size: 9px;
+      font-family: Consolas, monospace;
+      border-radius: 4px;
+      padding: 6px;
+      resize: vertical;
+    }
 
     footer {
       padding: 10px 16px 0;
@@ -170,6 +241,28 @@
   </label>
 </div>
 
+<div class="toggle-row" data-key="blockLiveChat">
+  <div class="toggle-info">
+    <strong>Live Chat</strong>
+    <span>Chat panel on streams &amp; premieres</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="blockLiveChat"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="toggle-row" data-key="disableAutoplay">
+  <div class="toggle-info">
+    <strong>Stop Autoplay</strong>
+    <span>Forces "autoplay next" off</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="disableAutoplay"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
 <div class="section-label">Home Feed</div>
 
 <div class="toggle-row" data-key="blockShorts">
@@ -216,6 +309,17 @@
   </label>
 </div>
 
+<div class="toggle-row" data-key="deClickbait">
+  <div class="toggle-info">
+    <strong>Clickbait Remover</strong>
+    <span>Real video frames, de-CAPS titles</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="deClickbait"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
 <div class="toggle-row" data-key="blockHomeFeed">
   <div class="toggle-info">
     <strong>Entire Home Feed</strong>
@@ -240,7 +344,34 @@
   </label>
 </div>
 
-<footer>Changes apply instantly on YouTube tabs</footer>
+<div class="toggle-row" data-key="redirectHome">
+  <div class="toggle-info">
+    <strong>Home → Subscriptions</strong>
+    <span>Home page opens your subs feed</span>
+  </div>
+  <label class="switch">
+    <input type="checkbox" id="redirectHome"/>
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div class="section-label">Muted Words &amp; Channels</div>
+
+<div class="mute-row">
+  <input type="text" id="muteInput" placeholder="word or channel name…" maxlength="60"/>
+  <button id="muteAdd">Add</button>
+</div>
+<div class="chips" id="muteChips"></div>
+
+<div class="section-label">Backup</div>
+
+<div class="backup-row">
+  <button id="exportBtn">Export</button>
+  <button id="importBtn">Import</button>
+</div>
+<textarea id="backupBox" spellcheck="false" placeholder="Export fills this box (and copies to clipboard). Paste here and hit Import to restore."></textarea>
+
+<footer>Changes apply instantly · Alt+Shift+Y to pause</footer>
 <script src="defaults.js"></script>
 <script src="popup.js"></script>
 </body>

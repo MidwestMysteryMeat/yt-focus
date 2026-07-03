@@ -13,6 +13,7 @@ const ATTR_MAP = {
   blockAds:         'data-ytf-ads',
   blockEndscreen:   'data-ytf-endscreen',
   blockMerch:       'data-ytf-merch',
+  blockLiveChat:    'data-ytf-livechat',
   blockHomeFeed:    'data-ytf-homefeed',
 };
 
@@ -101,10 +102,23 @@ const JS_RULES = {
       'ytd-post-renderer',
     ].join(','),
   },
+  blockLiveChat: {
+    selector: 'ytd-watch-flexy #chat,ytd-live-chat-frame',
+  },
   blockHomeFeed: {
     selector: 'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer',
   },
 };
+
+// ── Mute list: containers to text-match against muteList terms ──
+const MUTE_ITEM_SELECTOR = [
+  'ytd-rich-item-renderer',
+  'ytd-video-renderer',
+  'ytd-compact-video-renderer',
+  'ytd-grid-video-renderer',
+  'ytd-playlist-video-renderer',
+  'yt-lockup-view-model',
+].join(',');
 
 // Nav entry rules — single pass for both Shorts + LeftNav
 const NAV_RULES = [
@@ -186,6 +200,76 @@ function skipVideoAd() {
   )?.click();
 }
 
+// ── Autoplay-next killer ──
+// Clicking the toggle flips aria-checked to false, so this never loops;
+// if YouTube (or the user) turns it back on, the next scrub re-disables it.
+function forceAutoplayOff() {
+  if (!currentSettings.enabled || !currentSettings.disableAutoplay) return;
+  document.querySelector('.ytp-autonav-toggle-button[aria-checked="true"]')?.click();
+}
+
+// ── Mute list: hide videos by title/channel keyword ──
+function applyMuteList() {
+  const terms = (currentSettings.muteList || [])
+    .map(t => String(t).toLowerCase())
+    .filter(Boolean);
+  const active = currentSettings.enabled && terms.length > 0;
+
+  document.querySelectorAll(MUTE_ITEM_SELECTOR).forEach(item => {
+    if (!active) { showEl(item); return; }
+    const title   = item.querySelector('#video-title, h3')?.textContent || '';
+    const channel = item.querySelector('ytd-channel-name, .yt-lockup-metadata-view-model__metadata')?.textContent || '';
+    const hay = (title + ' ' + channel).toLowerCase();
+    terms.some(t => hay.includes(t)) ? hideEl(item) : showEl(item);
+  });
+}
+
+// ── Clickbait remover ──
+// Titles: rewrite SHOUTING titles (>60% caps) to sentence case.
+// Thumbnails: swap the curated thumbnail for a real mid-video frame.
+// Originals are stashed in data attributes so toggling off restores them.
+// Safe against observer loops: the MutationObserver watches childList
+// only, and rewritten titles no longer trip the caps threshold.
+function applyClickbait() {
+  const active = currentSettings.enabled && currentSettings.deClickbait;
+
+  document.querySelectorAll('#video-title').forEach(el => {
+    if (active) {
+      const t = el.textContent;
+      const letters = t.replace(/[^A-Za-z]/g, '');
+      if (letters.length < 10) return;
+      const upper = letters.replace(/[^A-Z]/g, '').length;
+      if (upper / letters.length <= 0.6) return;
+      if (el.dataset.ytfOrigTitle == null) el.dataset.ytfOrigTitle = t;
+      const lower = t.toLowerCase();
+      el.textContent = lower.charAt(0).toUpperCase() + lower.slice(1);
+    } else if (el.dataset.ytfOrigTitle != null) {
+      el.textContent = el.dataset.ytfOrigTitle;
+      delete el.dataset.ytfOrigTitle;
+    }
+  });
+
+  document.querySelectorAll('ytd-thumbnail img, yt-thumbnail-view-model img').forEach(img => {
+    if (active) {
+      const m = (img.src || '').match(/i\.ytimg\.com\/vi(?:_webp)?\/([A-Za-z0-9_-]{6,})\//);
+      if (!m) return;
+      const frame = `https://i.ytimg.com/vi/${m[1]}/hq2.jpg`;
+      if (img.src === frame) return;
+      if (img.dataset.ytfOrigSrc == null) {
+        img.dataset.ytfOrigSrc = img.src;
+        img.dataset.ytfOrigSrcset = img.srcset || '';
+      }
+      img.removeAttribute('srcset');
+      img.src = frame;
+    } else if (img.dataset.ytfOrigSrc != null) {
+      img.src = img.dataset.ytfOrigSrc;
+      if (img.dataset.ytfOrigSrcset) img.srcset = img.dataset.ytfOrigSrcset;
+      delete img.dataset.ytfOrigSrc;
+      delete img.dataset.ytfOrigSrcset;
+    }
+  });
+}
+
 // ── Main scrub ──
 function scrub() {
   const on = currentSettings.enabled;
@@ -211,6 +295,9 @@ function scrub() {
   });
 
   skipVideoAd();
+  forceAutoplayOff();
+  applyMuteList();
+  applyClickbait();
 
   // ─ Toggle-controlled: rule-based ─
   for (const [key, rule] of Object.entries(JS_RULES)) {
@@ -283,11 +370,20 @@ function redirectShorts() {
   if (m) location.replace('/watch?v=' + m[1]);
 }
 
+// ── Home → Subscriptions redirect (opt-in) ──
+function redirectHome() {
+  if (!settingsLoaded || !currentSettings.enabled || !currentSettings.redirectHome) return;
+  if (location.pathname === '/' && !location.search) {
+    location.replace('/feed/subscriptions');
+  }
+}
+
 // ── YouTube SPA navigation hook ──
 // Uses scheduleScrub for the early pass (deduplicates with observer),
 // direct scrub at 800ms to catch late-rendering elements.
 window.addEventListener('yt-navigate-finish', () => {
   redirectShorts();
+  redirectHome();
   scheduleScrub();
   setTimeout(scrub, 800);
 });
@@ -303,24 +399,26 @@ if (document.readyState !== 'loading') {
   startObserver();
 }
 
-// ── Load settings from storage ──
-browser.storage.local.get(DEFAULTS).then(settings => {
-  currentSettings = { ...DEFAULTS, ...settings };
+// ── Load settings from storage (defaults.js handles sync + migration) ──
+loadSettings().then(settings => {
+  currentSettings = settings;
   settingsLoaded = true;
   applyAttrs();
   scrub();
   redirectShorts();
+  redirectHome();
 });
 
-// ── Live updates: fires in every YouTube tab when the popup saves ──
+// ── Live updates: fires in every YouTube tab on popup save / shortcut ──
 browser.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local') return;
+  if (area !== 'sync') return;
   for (const [key, { newValue }] of Object.entries(changes)) {
     if (key in DEFAULTS) currentSettings[key] = newValue;
   }
   applyAttrs();
   scrub();
   redirectShorts();
+  redirectHome();
 });
 
 // Apply attrs immediately with defaults (before storage resolves) to prevent flash
