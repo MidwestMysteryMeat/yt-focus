@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "3.2",
+  "version": "3.3",
   "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter.",
   "icons": {
     "48": "icons/icon48.png",
@@ -14,6 +14,20 @@
       "96": "icons/icon96.png"
     },
     "default_title": "YT Focus"
+  },
+  "background": {
+    "scripts": [
+      "defaults.js",
+      "background.js"
+    ]
+  },
+  "commands": {
+    "toggle-focus": {
+      "suggested_key": {
+        "default": "Alt+Shift+Y"
+      },
+      "description": "YT Focus: pause/resume"
+    }
   },
   "content_scripts": [
     {

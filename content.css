@@ -99,6 +99,12 @@ html[data-ytf-merch] ytd-rich-item-renderer:has(ytd-post-renderer) {
   display: none !important;
 }
 
+/* ── Live chat on streams ── */
+html[data-ytf-livechat] ytd-watch-flexy #chat,
+html[data-ytf-livechat] ytd-live-chat-frame {
+  display: none !important;
+}
+
 /* ── Entire home feed (opt-in blank homepage) ── */
 html[data-ytf-homefeed] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer {
   display: none !important;

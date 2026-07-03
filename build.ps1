@@ -12,8 +12,8 @@ $zipPath = Join-Path $distDir "yt-focus-v$version.zip"
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
 $files = @(
-    'manifest.json', 'defaults.js', 'content.js', 'content.css',
-    'popup.html', 'popup.js',
+    'manifest.json', 'defaults.js', 'background.js', 'content.js',
+    'content.css', 'popup.html', 'popup.js',
     'icons/icon48.png', 'icons/icon96.png'
 )
 

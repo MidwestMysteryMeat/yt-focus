@@ -22,12 +22,25 @@ in the toolbar popup, applied instantly to every open YouTube tab.
 | Description & Ask | Description box, Ask panel, chapters, transcript |
 | End Screens & Cards | Video-end recommendation wall, in-video card teasers |
 | Ads | Display/in-feed/masthead ads; video ads are auto-skipped (seek to end + click Skip) |
+| Live Chat | Chat panel on streams & premieres |
+| Stop Autoplay | Forces the player's "autoplay next" toggle off |
 | Shorts | Shelves, nav links, search results — and redirects `/shorts/<id>` to the normal `/watch` player |
 | Topic Shelves | "Explore more topics", AI Ask panel, search-result shelves ("People also watched", "For you") |
 | Filter Bar | Podcasts / Gaming / News… chips |
 | Merch & Posts | Merch/ticket/donation shelves, community posts |
+| Clickbait Remover | Swaps thumbnails for real mid-video frames, rewrites SHOUTING titles to sentence case |
 | Entire Home Feed | Blanks the home page grid completely (opt-in) |
+| Home → Subscriptions | Redirects the home page to your subscriptions feed (opt-in) |
 | Left Sidebar Clutter | You, History, Subscriptions list, footer links |
+
+**Muted words & channels** — add words or channel names in the popup;
+any video whose title or channel matches is hidden everywhere (home,
+search, sidebar, playlists).
+
+**QoL** — settings live in `storage.sync` (carried across devices by
+Firefox Sync; pre-3.3 local settings migrate automatically), JSON
+export/import in the popup, and **Alt+Shift+Y** pauses/resumes the
+whole extension.
 
 **Always on** (no toggle, but gated by the master switch): voice search /
 create / notification buttons, hamburger menu, channel info below videos,
@@ -77,8 +90,17 @@ Load Temporary Add-on → pick `manifest.json`.
 - Text-matched rules (channel tabs, nav entries, shelf titles) assume
   an English UI.
 
+## License
+
+[MIT](LICENSE)
+
 ## Changelog
 
+- **3.3** — Unhook-parity pack (Stop Autoplay, Live Chat hiding,
+  Home→Subscriptions redirect); muted words & channels list; Clickbait
+  Remover (frame thumbnails + de-CAPS titles); settings moved to
+  `storage.sync` with automatic migration; JSON export/import;
+  Alt+Shift+Y pause shortcut (new background script); MIT license.
 - **3.2** — Master on/off switch; Ads toggle (cosmetic hiding +
   video-ad auto-skip); End Screens & Cards toggle; Merch & Posts
   toggle; opt-in blank home page; search-result shelf cleanup under
