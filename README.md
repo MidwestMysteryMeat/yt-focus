@@ -92,7 +92,7 @@ Load Temporary Add-on → pick `manifest.json`.
 
 ## License
 
-[MIT](LICENSE)
+Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved with a Sharing Exception).
 
 ## Changelog
 
@@ -100,7 +100,7 @@ Load Temporary Add-on → pick `manifest.json`.
   Home→Subscriptions redirect); muted words & channels list; Clickbait
   Remover (frame thumbnails + de-CAPS titles); settings moved to
   `storage.sync` with automatic migration; JSON export/import;
-  Alt+Shift+Y pause shortcut (new background script); MIT license.
+  Alt+Shift+Y pause shortcut (new background script); relicensed under the Ephemeral / Proprietary License.
 - **3.2** — Master on/off switch; Ads toggle (cosmetic hiding +
   video-ad auto-skip); End Screens & Cards toggle; Merch & Posts
   toggle; opt-in blank home page; search-result shelf cleanup under
