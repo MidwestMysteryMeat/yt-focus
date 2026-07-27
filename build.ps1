@@ -13,7 +13,7 @@ if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
 $files = @(
     'manifest.json', 'defaults.js', 'background.js', 'content.js',
-    'content.css', 'popup.html', 'popup.js',
+    'spotify.js', 'content.css', 'popup.html', 'popup.js',
     'icons/icon48.png', 'icons/icon96.png'
 )
 

@@ -20,6 +20,8 @@ const DEFAULTS = {
   deClickbait:      true,   // real video frames as thumbnails, de-CAPS titles
   blockHomeFeed:    false,  // blank the home page entirely (opt-in)
   redirectHome:     false,  // home page → subscriptions feed (opt-in)
+  spotifyMuteAds:   true,   // Spotify web player: mute audio ads (can't skip — server-stitched)
+  spotifyHideAdUI:  true,   // Spotify web player: hide visual ad units
   muteList:         [],     // hide videos matching these words/channels
 };
 

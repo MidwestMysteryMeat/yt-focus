@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "3.3",
-  "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter.",
+  "version": "3.4",
+  "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter. Mutes Spotify web-player ads.",
   "icons": {
     "48": "icons/icon48.png",
     "96": "icons/icon96.png"
@@ -42,11 +42,22 @@
         "content.css"
       ],
       "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "*://open.spotify.com/*"
+      ],
+      "js": [
+        "defaults.js",
+        "spotify.js"
+      ],
+      "run_at": "document_start"
     }
   ],
   "permissions": [
     "storage",
-    "*://www.youtube.com/*"
+    "*://www.youtube.com/*",
+    "*://open.spotify.com/*"
   ],
   "browser_specific_settings": {
     "gecko": {

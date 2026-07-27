@@ -2,7 +2,8 @@
 
 Firefox extension that strips the noise out of YouTube: Shorts, comments,
 recommendations, action bars, channel-page clutter — each behind a toggle
-in the toolbar popup, applied instantly to every open YouTube tab.
+in the toolbar popup, applied instantly to every open YouTube tab. Also
+mutes ads on the Spotify web player.
 
 **Repo:** [github.com/MidwestMysteryMeat/yt-focus](https://github.com/MidwestMysteryMeat/yt-focus)
 · by [@MidwestMysteryMeat](https://github.com/MidwestMysteryMeat)
@@ -32,6 +33,20 @@ in the toolbar popup, applied instantly to every open YouTube tab.
 | Entire Home Feed | Blanks the home page grid completely (opt-in) |
 | Home → Subscriptions | Redirects the home page to your subscriptions feed (opt-in) |
 | Left Sidebar Clutter | You, History, Subscriptions list, footer links |
+
+**Spotify (web player, `open.spotify.com` only)** — two toggles:
+
+| Toggle | Does |
+|---|---|
+| Mute Ads | Detects audio ads and mutes the player for their duration, restoring your previous mute state after |
+| Hide Ad Banners | Hides visual ad units cosmetically |
+
+> Spotify audio ads **cannot be skipped** — they're stitched into the
+> audio stream server-side and the player disables seeking while one
+> plays. Muting is the honest ceiling of what an extension can do. The
+> desktop app is out of reach entirely; this only works in the browser.
+> Detection uses the tab title ("Advertisement"), the now-playing
+> widget's text, and a linkless-widget fallback for non-English UIs.
 
 **Muted words & channels** — add words or channel names in the popup;
 any video whose title or channel matches is hidden everywhere (home,
@@ -96,6 +111,9 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **3.4** — Spotify web-player support: audio ads auto-muted (with the
+  user's own mute state restored afterwards), visual ad units hidden;
+  new `spotify.js` content script + popup section.
 - **3.3** — Unhook-parity pack (Stop Autoplay, Live Chat hiding,
   Home→Subscriptions redirect); muted words & channels list; Clickbait
   Remover (frame thumbnails + de-CAPS titles); settings moved to
