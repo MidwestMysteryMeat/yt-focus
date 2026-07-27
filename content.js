@@ -15,6 +15,10 @@ const ATTR_MAP = {
   blockMerch:       'data-ytf-merch',
   blockLiveChat:    'data-ytf-livechat',
   blockHomeFeed:    'data-ytf-homefeed',
+  hideMixes:        'data-ytf-mixes',
+  hideOwner:        'data-ytf-owner',
+  minimalChannel:   'data-ytf-channel',
+  hideTopbar:       'data-ytf-topbar',
 };
 
 // ── Toggle-controlled JS rules ──
@@ -71,6 +75,7 @@ const JS_RULES = {
       'ytd-guide-collapsible-section-entry-renderer',
       '#guide-links-primary',
       '#guide-links-secondary',
+      '#guide-button',
     ].join(','),
     hideGuideSections: true,
   },
@@ -101,6 +106,10 @@ const JS_RULES = {
       '.ytp-cards-teaser',
       '.ytp-cards-button',
       '.ytp-suggested-action',
+      // Recommendations overlay when the video is paused
+      '.ytp-pause-overlay',
+      // Channel watermark in the player corner
+      '.ytp-watermark',
     ].join(','),
   },
   blockMerch: {
@@ -116,6 +125,45 @@ const JS_RULES = {
   },
   blockHomeFeed: {
     selector: 'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer',
+  },
+  hideMixes: {
+    selector: [
+      'ytd-compact-radio-renderer',
+      'ytd-radio-renderer',
+      'ytd-rich-item-renderer:has(a[href*="start_radio=1"])',
+      'yt-lockup-view-model:has(a[href*="start_radio=1"])',
+      'ytd-compact-video-renderer:has(a[href*="start_radio=1"])',
+    ].join(','),
+  },
+  hideOwner: {
+    selector: [
+      'ytd-watch-flexy ytd-video-owner-renderer',
+      'ytd-watch-metadata #owner',
+      'ytd-watch-flexy #upload-info',
+    ].join(','),
+  },
+  minimalChannel: {
+    selector: [
+      'ytd-recognition-shelf-renderer',
+      'ytd-channel-video-player-renderer',
+      'ytd-branded-page-v2-secondary-column-renderer',
+      'ytd-about-channel-renderer',
+      'ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"]',
+      'yt-image-banner-view-model',
+      '#page-header-banner',
+      '#banner-container',
+      'yt-page-header-view-model',
+      'yt-channel-tagline-view-model',
+      '#channel-tagline',
+    ].join(','),
+  },
+  hideTopbar: {
+    selector: [
+      '#voice-search-button',
+      'ytd-topbar-menu-button-renderer',
+      '#masthead-container #buttons ytd-button-renderer',
+      '#masthead-container #buttons yt-icon-button',
+    ].join(','),
   },
 };
 
@@ -136,35 +184,10 @@ const NAV_RULES = [
 ];
 const NAV_ENTRY_SELECTOR = 'ytd-guide-entry-renderer,ytd-mini-guide-entry-renderer,ytd-compact-link-renderer';
 
-// ── Always-on hides (no toggle, no user control) ──
-const ALWAYS_HIDE_SELECTOR = [
-  // Watch page: channel info below video (scoped to avoid matching elsewhere)
-  'ytd-watch-flexy ytd-video-owner-renderer',
-  'ytd-watch-metadata #owner',
-  'ytd-watch-flexy #upload-info',
-  // Hamburger menu button
-  '#guide-button',
-  // Channel page: recognition/featured shelves
-  'ytd-recognition-shelf-renderer',
-  'ytd-channel-video-player-renderer',
-  'ytd-branded-page-v2-secondary-column-renderer',
-  // Channel about dialog
-  'ytd-about-channel-renderer',
-  'ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"]',
-  // Channel banner
-  'yt-image-banner-view-model',
-  '#page-header-banner',
-  '#banner-container',
-  // Channel metadata (avatar, handle, subscribers, description, subscribe)
-  'yt-page-header-view-model',
-  'yt-channel-tagline-view-model',
-  '#channel-tagline',
-].join(',');
-
-// Channel page: shelf titles to always hide (hoisted from scrub)
+// Channel page (minimalChannel): shelf titles to hide (text-matched)
 const BLOCKED_SHELF_TITLES = ['for you', 'official channels', 'channels', 'collaborations', 'posts'];
 
-// Channel page: tabs to always hide
+// Channel page (minimalChannel): tabs to hide
 const BLOCKED_TAB_LABELS = ['shorts', 'posts', 'store'];
 
 let currentSettings = { ...DEFAULTS };
@@ -217,6 +240,49 @@ function forceAutoplayOff() {
   document.querySelector('.ytp-autonav-toggle-button[aria-checked="true"]')?.click();
 }
 
+// ── "Video paused. Continue watching?" auto-dismiss ──
+// The idle interrupt that pauses long sessions. Grouped under
+// disableAutoplay: both are "let the video just play" controls.
+function dismissContinueWatching() {
+  if (!currentSettings.enabled || !currentSettings.disableAutoplay) return;
+  const dialog = document.querySelector('yt-confirm-dialog-renderer');
+  if (dialog && /continue watching/i.test(dialog.textContent || '')) {
+    const btn = dialog.querySelector('#confirm-button button')
+             || dialog.querySelector('#confirm-button');
+    btn?.click();
+  }
+}
+
+// ── Playback defaults: speed + theater mode ──
+// Applied once per video id so the user can still override afterwards;
+// never touches an ad (ad-showing) so the skipper's seek math stays sane.
+let speedAppliedFor = null;
+let theaterAppliedFor = null;
+function applyPlaybackDefaults() {
+  if (!currentSettings.enabled) return;
+  const id = new URLSearchParams(location.search).get('v');
+  if (!id) return;
+
+  if (currentSettings.playbackSpeed > 0 && speedAppliedFor !== id) {
+    const player = document.querySelector('#movie_player:not(.ad-showing)');
+    const video = player && player.querySelector('video');
+    if (video) {
+      video.playbackRate = currentSettings.playbackSpeed;
+      speedAppliedFor = id;
+    }
+  }
+
+  if (currentSettings.defaultTheater && theaterAppliedFor !== id) {
+    const flexy = document.querySelector('ytd-watch-flexy');
+    if (flexy) {
+      if (!flexy.hasAttribute('theater') && !flexy.hasAttribute('fullscreen')) {
+        document.querySelector('#movie_player .ytp-size-button')?.click();
+      }
+      theaterAppliedFor = id;
+    }
+  }
+}
+
 // ── Mute list: hide videos by title/channel keyword ──
 function applyMuteList() {
   const terms = (currentSettings.muteList || [])
@@ -234,11 +300,28 @@ function applyMuteList() {
 }
 
 // ── Clickbait remover ──
-// Titles: rewrite SHOUTING titles (>60% caps) to sentence case.
+// Titles: rewrite SHOUTING titles (>60% caps) to sentence case, keeping
+// known acronyms and digit-bearing tokens (PS5, GTA6) uppercase.
 // Thumbnails: swap the curated thumbnail for a real mid-video frame.
 // Originals are stashed in data attributes so toggling off restores them.
 // Safe against observer loops: the MutationObserver watches childList
 // only, and rewritten titles no longer trip the caps threshold.
+const KEEP_CAPS = new Set([
+  'ai', 'tv', 'usa', 'uk', 'us', 'eu', 'un', 'fbi', 'cia', 'nasa', 'nba',
+  'nfl', 'mlb', 'nhl', 'ufc', 'wwe', 'f1', 'gta', 'pc', 'diy', 'ceo',
+  'vs', 'rpg', 'fps', 'mmo', 'ufo', 'usb', 'gpu', 'cpu', 'ios', 'vr',
+  'ar', 'hd', 'llm', 'gpt', 'nyc', 'la', 'dc', 'ww2', 'wwii', 'diy',
+]);
+
+function smartSentenceCase(t) {
+  const out = t.toLowerCase().replace(/[a-z0-9]+/gi, (w) => {
+    if (KEEP_CAPS.has(w) || /\d/.test(w)) return w.toUpperCase();
+    if (w === 'i') return 'I';
+    return w;
+  });
+  return out.charAt(0).toUpperCase() + out.slice(1);
+}
+
 function applyClickbait() {
   const active = currentSettings.enabled && currentSettings.deClickbait;
 
@@ -250,8 +333,7 @@ function applyClickbait() {
       const upper = letters.replace(/[^A-Z]/g, '').length;
       if (upper / letters.length <= 0.6) return;
       if (el.dataset.ytfOrigTitle == null) el.dataset.ytfOrigTitle = t;
-      const lower = t.toLowerCase();
-      el.textContent = lower.charAt(0).toUpperCase() + lower.slice(1);
+      el.textContent = smartSentenceCase(t);
     } else if (el.dataset.ytfOrigTitle != null) {
       el.textContent = el.dataset.ytfOrigTitle;
       delete el.dataset.ytfOrigTitle;
@@ -279,14 +361,28 @@ function applyClickbait() {
   });
 }
 
+// ── Hide (mostly) watched videos ──
+// CSS can't read the progress bar's width, so this is JS-only: hide the
+// containing item when the resume-progress bar shows ≥90% watched.
+// Runs AFTER applyMuteList in scrub — mute's showEl pass would otherwise
+// undo these hides.
+function applyWatched() {
+  const active = currentSettings.enabled && currentSettings.hideWatched;
+  document.querySelectorAll('ytd-thumbnail-overlay-resume-playback-renderer #progress')
+    .forEach(bar => {
+      const item = bar.closest(MUTE_ITEM_SELECTOR);
+      if (!item) return;
+      const pct = parseFloat(bar.style.width);
+      if (active && pct >= 90) hideEl(item);
+    });
+}
+
 // ── Main scrub ──
 function scrub() {
   const on = currentSettings.enabled;
+  const channelStrip = on && currentSettings.minimalChannel;
 
-  // ─ Always-on: selector-based ─
-  document.querySelectorAll(ALWAYS_HIDE_SELECTOR).forEach(on ? hideEl : showEl);
-
-  // ─ Always-on: channel shelf titles (text-matched) ─
+  // ─ minimalChannel: channel shelf titles (text-matched) ─
   // Scoped to channel pages: in search results the wrapping
   // ytd-item-section-renderer holds ALL results, and a "For you" shelf
   // title inside it would otherwise hide the entire results list.
@@ -294,18 +390,21 @@ function scrub() {
     'ytd-browse[page-subtype="channels"] ytd-shelf-renderer, ytd-browse[page-subtype="channels"] ytd-item-section-renderer'
   ).forEach(shelf => {
     const title = (shelf.querySelector('#title, #title-text, h2')?.textContent || '').trim().toLowerCase();
-    if (BLOCKED_SHELF_TITLES.some(b => title.includes(b))) (on ? hideEl : showEl)(shelf);
+    if (BLOCKED_SHELF_TITLES.some(b => title.includes(b))) (channelStrip ? hideEl : showEl)(shelf);
   });
 
-  // ─ Always-on: channel tabs (text-matched) ─
+  // ─ minimalChannel: channel tabs (text-matched) ─
   document.querySelectorAll('yt-tab-shape, tp-yt-paper-tab').forEach(tab => {
     const label = (tab.getAttribute('tab-title') || tab.textContent || '').trim().toLowerCase();
-    if (BLOCKED_TAB_LABELS.includes(label)) (on ? hideEl : showEl)(tab);
+    if (BLOCKED_TAB_LABELS.includes(label)) (channelStrip ? hideEl : showEl)(tab);
   });
 
   skipVideoAd();
   forceAutoplayOff();
+  dismissContinueWatching();
+  applyPlaybackDefaults();
   applyMuteList();
+  applyWatched();
   applyClickbait();
 
   // ─ Toggle-controlled: rule-based ─

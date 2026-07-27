@@ -1,7 +1,8 @@
 /* ══════════════════════════════════════════════════
-   YT Focus v3 — CSS rules
-   Toggle-controlled rules gated by data-ytf-* attrs.
-   Always-on rules are unscoped (no attr gate).
+   YT Focus v4 — CSS rules
+   Every rule is gated by a data-ytf-* attr on <html>;
+   attrs are only set while the master switch is on,
+   so removing an attr instantly restores the element.
    ══════════════════════════════════════════════════ */
 
 
@@ -91,7 +92,9 @@ html[data-ytf-endscreen] .ytp-endscreen-content,
 html[data-ytf-endscreen] .ytp-ce-element,
 html[data-ytf-endscreen] .ytp-cards-teaser,
 html[data-ytf-endscreen] .ytp-cards-button,
-html[data-ytf-endscreen] .ytp-suggested-action {
+html[data-ytf-endscreen] .ytp-suggested-action,
+html[data-ytf-endscreen] .ytp-pause-overlay,
+html[data-ytf-endscreen] .ytp-watermark {
   display: none !important;
 }
 
@@ -139,75 +142,78 @@ html[data-ytf-leftnav] ytd-mini-guide-entry-renderer:has(yt-icon[icon="account_c
 }
 
 
+/* ── Mixes & radio cards (feeds + watch sidebar) ── */
+html[data-ytf-mixes] ytd-compact-radio-renderer,
+html[data-ytf-mixes] ytd-radio-renderer,
+html[data-ytf-mixes] ytd-rich-item-renderer:has(a[href*="start_radio=1"]),
+html[data-ytf-mixes] yt-lockup-view-model:has(a[href*="start_radio=1"]),
+html[data-ytf-mixes] ytd-compact-video-renderer:has(a[href*="start_radio=1"]) {
+  display: none !important;
+}
+
+/* ── Top bar: voice search, create, notifications (opt-in) ── */
+html[data-ytf-topbar] #voice-search-button,
+html[data-ytf-topbar] ytd-topbar-menu-button-renderer,
+html[data-ytf-topbar] #masthead-container #buttons ytd-button-renderer,
+html[data-ytf-topbar] #masthead-container #buttons yt-icon-button {
+  display: none !important;
+}
+
+/* ── Hamburger menu button (part of Left Sidebar Clutter) ── */
+html[data-ytf-leftnav] #guide-button {
+  display: none !important;
+}
+
+/* ── Watch page: channel info below video (opt-in) ── */
+/* Scoped to watch page — bare #owner could match elsewhere */
+html[data-ytf-owner] ytd-watch-flexy ytd-video-owner-renderer,
+html[data-ytf-owner] ytd-watch-metadata #owner,
+html[data-ytf-owner] ytd-watch-flexy #upload-info {
+  display: none !important;
+}
+
 /* ═══════════════════════════════════════════════
-   ALWAYS ON (no per-feature toggle)
-   Gated by data-ytf-on so the master switch can
-   deactivate everything at once.
+   MINIMAL CHANNEL PAGES (opt-in, data-ytf-channel)
+   Strips banner, avatar/metadata, Shorts/Posts/Store
+   tabs, promo shelves. Tab bar itself is preserved.
    ═══════════════════════════════════════════════ */
 
-/* ── Top bar: voice search, create, notifications ── */
-html[data-ytf-on] #voice-search-button,
-html[data-ytf-on] ytd-topbar-menu-button-renderer,
-html[data-ytf-on] #masthead-container #buttons ytd-button-renderer,
-html[data-ytf-on] #masthead-container #buttons yt-icon-button {
+html[data-ytf-channel] yt-tab-shape[tab-title="Shorts"],
+html[data-ytf-channel] yt-tab-shape[tab-title="Posts"],
+html[data-ytf-channel] yt-tab-shape[tab-title="Store"],
+html[data-ytf-channel] tp-yt-paper-tab:has(> div[tab-title="Shorts"]),
+html[data-ytf-channel] tp-yt-paper-tab:has(> div[tab-title="Posts"]),
+html[data-ytf-channel] tp-yt-paper-tab:has(> div[tab-title="Store"]),
+html[data-ytf-channel] [tab-title="Shorts"],
+html[data-ytf-channel] [tab-title="Posts"],
+html[data-ytf-channel] [tab-title="Store"] {
   display: none !important;
 }
 
-/* ── Hamburger menu button ── */
-html[data-ytf-on] #guide-button {
+html[data-ytf-channel] ytd-recognition-shelf-renderer,
+html[data-ytf-channel] ytd-channel-video-player-renderer,
+html[data-ytf-channel] ytd-branded-page-v2-secondary-column-renderer {
   display: none !important;
 }
 
-/* ── Watch page: channel info below video ── */
-/* Scoped to watch page — bare #owner could match elsewhere */
-html[data-ytf-on] ytd-watch-flexy ytd-video-owner-renderer,
-html[data-ytf-on] ytd-watch-metadata #owner,
-html[data-ytf-on] ytd-watch-flexy #upload-info {
+html[data-ytf-channel] ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"],
+html[data-ytf-channel] ytd-about-channel-renderer,
+html[data-ytf-channel] tp-yt-paper-dialog:has(ytd-about-channel-renderer) {
   display: none !important;
 }
 
-/* ── Channel page: hide Shorts, Posts, Store tabs ── */
-html[data-ytf-on] yt-tab-shape[tab-title="Shorts"],
-html[data-ytf-on] yt-tab-shape[tab-title="Posts"],
-html[data-ytf-on] yt-tab-shape[tab-title="Store"],
-html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Shorts"]),
-html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Posts"]),
-html[data-ytf-on] tp-yt-paper-tab:has(> div[tab-title="Store"]),
-html[data-ytf-on] [tab-title="Shorts"],
-html[data-ytf-on] [tab-title="Posts"],
-html[data-ytf-on] [tab-title="Store"] {
+html[data-ytf-channel] ytd-c4-tabbed-header-renderer #banner-container,
+html[data-ytf-channel] ytd-c4-tabbed-header-renderer .banner-visible-area,
+html[data-ytf-channel] yt-image-banner-view-model,
+html[data-ytf-channel] #page-header-banner,
+html[data-ytf-channel] ytd-page-header-renderer .page-header-banner {
   display: none !important;
 }
 
-/* ── Channel page: recognition/featured shelves ── */
-html[data-ytf-on] ytd-recognition-shelf-renderer,
-html[data-ytf-on] ytd-channel-video-player-renderer,
-html[data-ytf-on] ytd-branded-page-v2-secondary-column-renderer {
-  display: none !important;
-}
-
-/* ── Channel page: about dialog/panel ── */
-html[data-ytf-on] ytd-engagement-panel-section-list-renderer[target-id="channel-about-panel"],
-html[data-ytf-on] ytd-about-channel-renderer,
-html[data-ytf-on] tp-yt-paper-dialog:has(ytd-about-channel-renderer) {
-  display: none !important;
-}
-
-/* ── Channel page: banner ── */
-html[data-ytf-on] ytd-c4-tabbed-header-renderer #banner-container,
-html[data-ytf-on] ytd-c4-tabbed-header-renderer .banner-visible-area,
-html[data-ytf-on] yt-image-banner-view-model,
-html[data-ytf-on] #page-header-banner,
-html[data-ytf-on] ytd-page-header-renderer .page-header-banner {
-  display: none !important;
-}
-
-/* ── Channel page: metadata (avatar, handle, sub count, description, subscribe) ── */
-/* Preserved: tab bar for navigation */
-html[data-ytf-on] yt-page-header-view-model,
-html[data-ytf-on] yt-channel-tagline-view-model,
-html[data-ytf-on] #channel-tagline,
-html[data-ytf-on] ytd-c4-tabbed-header-renderer #channel-header,
-html[data-ytf-on] ytd-c4-tabbed-header-renderer #channel-header-container {
+html[data-ytf-channel] yt-page-header-view-model,
+html[data-ytf-channel] yt-channel-tagline-view-model,
+html[data-ytf-channel] #channel-tagline,
+html[data-ytf-channel] ytd-c4-tabbed-header-renderer #channel-header,
+html[data-ytf-channel] ytd-c4-tabbed-header-renderer #channel-header-container {
   display: none !important;
 }

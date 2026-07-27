@@ -1,0 +1,6 @@
+<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+  <!-- YT Focus icon — plain. Red rounded square + white play triangle.
+       Colour #ff3b30 matches the popup accent; play glyph matches the header mark. -->
+  <rect x="0" y="0" width="96" height="96" rx="22" fill="#ff3b30"/>
+  <polygon points="37,26 72,48 37,70" fill="#ffffff"/>
+</svg>

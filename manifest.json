@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "3.5",
-  "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter. Mutes Spotify web-player ads.",
+  "version": "4.0",
+  "description": "Declutter YouTube your way: Shorts, comments, recommendations, ads, clickbait — every filter is a toggle. Timed pause, playback defaults, right-click channel muting. Also mutes Spotify web-player ads.",
   "icons": {
     "48": "icons/icon48.png",
     "96": "icons/icon96.png"
@@ -56,6 +56,7 @@
   ],
   "permissions": [
     "storage",
+    "contextMenus",
     "*://www.youtube.com/*",
     "*://open.spotify.com/*"
   ],

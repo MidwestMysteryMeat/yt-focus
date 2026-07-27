@@ -75,6 +75,13 @@ async function testYouTube() {
       </div>
       <div id="secondary"><span>up next</span></div>
       <ytd-comments id="comments"></ytd-comments>
+      <ytd-compact-radio-renderer><span>My Mix</span></ytd-compact-radio-renderer>
+      <ytd-watch-metadata><div id="owner"><span>Channel</span></div></ytd-watch-metadata>
+      <yt-confirm-dialog-renderer>
+        <span>Video paused. Continue watching?</span>
+        <div id="confirm-button"><button></button></div>
+      </yt-confirm-dialog-renderer>
+      <h3><a id="video-title">MY INSANE GTA 6 SPEEDRUN!! FBI SHOWED UP</a></h3>
     </ytd-app>
   </body></html>`;
 
@@ -94,6 +101,8 @@ async function testYouTube() {
   Object.defineProperty(video, 'currentTime', { get: () => ct, set: v => { ct = v; } });
   doc.querySelector('.ytp-skip-ad-button')
     .addEventListener('click', () => { win.__skipClicked = true; });
+  doc.querySelector('yt-confirm-dialog-renderer #confirm-button button')
+    .addEventListener('click', () => { win.__continueClicked = true; });
 
   const probe = `
     window.__done = (async () => {
@@ -121,6 +130,29 @@ async function testYouTube() {
 
       t('sidebar hidden (independent toggle)', hidden(q('#secondary')));
       t('comments hidden (independent toggle)', hidden(q('#comments')));
+
+      t('mix/radio card hidden (hideMixes default on)',
+        hidden(q('ytd-compact-radio-renderer')));
+      t('channel info under video NOT hidden (hideOwner default off)',
+        !hidden(q('ytd-watch-metadata #owner')));
+      t('"Continue watching?" auto-confirmed (disableAutoplay)',
+        window.__continueClicked === true);
+
+      const title = q('#video-title');
+      t('SHOUTING title rewritten', title.textContent !== title.dataset.ytfOrigTitle
+        && title.dataset.ytfOrigTitle === 'MY INSANE GTA 6 SPEEDRUN!! FBI SHOWED UP');
+      t('acronyms + digits survive de-CAPS',
+        title.textContent === 'My insane GTA 6 speedrun!! FBI showed up',
+        'got: ' + title.textContent);
+
+      await browser.storage.sync.set({ hideOwner: true });
+      t('hideOwner toggled on: owner hidden', hidden(q('ytd-watch-metadata #owner')));
+      await browser.storage.sync.set({ hideOwner: false });
+
+      await browser.storage.sync.set({ deClickbait: false });
+      t('clickbait off: original title restored',
+        title.textContent === 'MY INSANE GTA 6 SPEEDRUN!! FBI SHOWED UP');
+      await browser.storage.sync.set({ deClickbait: true });
 
       await browser.storage.sync.set({ enabled: false });
       t('master OFF: banner ad restored', !hidden(q('#masthead-ad')));

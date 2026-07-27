@@ -20,8 +20,16 @@ const DEFAULTS = {
   deClickbait:      true,   // real video frames as thumbnails, de-CAPS titles
   blockHomeFeed:    false,  // blank the home page entirely (opt-in)
   redirectHome:     false,  // home page → subscriptions feed (opt-in)
+  hideMixes:        true,   // algorithmic Mix/radio cards in feeds & sidebar
+  hideWatched:      false,  // hide videos you've already (mostly) watched
+  hideOwner:        false,  // channel avatar/name/subscribe under the player
+  minimalChannel:   false,  // strip channel pages: banner, avatar, tabs, shelves
+  hideTopbar:       false,  // voice search, create, notification bell
   spotifyMuteAds:   true,   // Spotify web player: mute audio ads (can't skip — server-stitched)
   spotifyHideAdUI:  true,   // Spotify web player: hide visual ad units
+  defaultTheater:   false,  // enter theater mode on each new video
+  playbackSpeed:    0,      // default speed per new video; 0 = leave alone
+  pausedUntil:      0,      // epoch ms; timed pause auto-resumes then (0 = none)
   muteList:         [],     // hide videos matching these words/channels
 };
 
