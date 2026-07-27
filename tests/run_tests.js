@@ -211,6 +211,75 @@ async function testYouTube() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// YouTube mobile (m.youtube.com)
+// ─────────────────────────────────────────────────────────────────────────
+async function testYouTubeMobile() {
+  const html = `<!DOCTYPE html><html><head><title>watch</title></head><body>
+    <ytm-app>
+      <ytm-reel-shelf-renderer><span>Shorts</span></ytm-reel-shelf-renderer>
+      <ytm-comment-section-renderer></ytm-comment-section-renderer>
+      <ytm-item-section-renderer section-identifier="related-items"></ytm-item-section-renderer>
+      <ytm-promoted-video-renderer></ytm-promoted-video-renderer>
+      <ytm-chip-cloud-renderer></ytm-chip-cloud-renderer>
+      <ytm-video-with-context-renderer>
+        <h3 class="media-item-headline">Drama video about MutedGuy</h3>
+      </ytm-video-with-context-renderer>
+      <ytm-video-with-context-renderer>
+        <h3 class="media-item-headline">Normal video</h3>
+      </ytm-video-with-context-renderer>
+    </ytm-app>
+  </body></html>`;
+
+  const dom = new JSDOM(html, {
+    url: 'https://m.youtube.com/watch?v=abc123',
+    runScripts: 'outside-only',
+  });
+  const win = dom.window;
+  installBrowserMock(win);
+
+  const probe = `
+    window.__done = (async () => {
+      const R = window.__results = [];
+      const t = (name, cond, detail) => R.push({ name, pass: !!cond, detail });
+      await new Promise(r => setTimeout(r, 60));
+      scrub();
+
+      const q = s => document.querySelector(s);
+      const hidden = el => !!el && el.style.display === 'none';
+
+      t('mobile: shorts shelf hidden', hidden(q('ytm-reel-shelf-renderer')));
+      t('mobile: comments hidden', hidden(q('ytm-comment-section-renderer')));
+      t('mobile: related section hidden',
+        hidden(q('ytm-item-section-renderer[section-identifier="related-items"]')));
+      t('mobile: promoted video hidden', hidden(q('ytm-promoted-video-renderer')));
+      t('mobile: filter chips hidden', hidden(q('ytm-chip-cloud-renderer')));
+      t('mobile: attr gate set on <html>',
+        document.documentElement.hasAttribute('data-ytf-shorts'));
+
+      await browser.storage.sync.set({ muteList: ['mutedguy'] });
+      scrub();
+      const items = document.querySelectorAll('ytm-video-with-context-renderer');
+      t('mobile: mute list hides matching video', hidden(items[0]));
+      t('mobile: mute list keeps other video', !hidden(items[1]));
+
+      // Canary is desktop-only — a mobile watch page must not count strikes
+      await runCanaryCheck();
+      const canary = (await browser.storage.local.get('ytfCanary')).ytfCanary;
+      t('mobile: canary does not run (no false strikes)', canary === undefined);
+
+      await browser.storage.sync.set({ pageWatch: false });
+      t('mobile: watch profile off applies here too',
+        !hidden(q('ytm-reel-shelf-renderer')));
+    })();
+  `;
+
+  win.eval(src('defaults.js') + '\n' + src('content.js') + '\n' + probe);
+  await win.__done;
+  report(win.__results, 'YouTube mobile (content.js @ m.youtube.com)');
+  win.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Spotify
 // ─────────────────────────────────────────────────────────────────────────
 async function testSpotify() {
@@ -305,6 +374,7 @@ async function testSpotify() {
 
 (async () => {
   await testYouTube();
+  await testYouTubeMobile();
   await testSpotify();
   console.log('\nPASS ' + PASS + '  FAIL ' + FAIL);
   process.exit(FAIL ? 1 : 0);

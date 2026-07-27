@@ -138,11 +138,22 @@ guards (a track literally named "Advertisement", a mid-load linkless
 widget). It proves the logic; it cannot prove YouTube/Spotify still use
 these DOM shapes — that only shows up in a live session.
 
+## Mobile (Firefox Android) — beta
+
+`m.youtube.com` uses its own `ytm-*` DOM, and 4.2 adds a mobile selector
+set for the core filters: Shorts (shelves, feed cards, bottom-nav tab),
+comments, related videos, ads, filter chips, shelves, mixes, merch/posts,
+channel info, mute list, and autoplay-off. Redirects (Shorts → watch,
+Home → Subscriptions) work since mobile uses the same paths. Not yet on
+mobile: clickbait title rewriting, hide-watched, blank home feed, and the
+channel-page/topbar/left-nav toggles (different mobile chrome). The
+selector canary is desktop-only, so mobile can't cause false "YouTube
+broke" warnings.
+
 ## Known gaps
 
-- `m.youtube.com` (Firefox Android) uses a completely different DOM
-  (`ytm-*` elements) — the manifest declares Android support but no
-  mobile selectors exist yet.
+- Mobile selectors are fixture-tested but need live-device verification
+  after YouTube mobile updates (marked beta above).
 - Text-matched rules (channel tabs, nav entries, shelf titles) assume
   an English UI.
 
@@ -152,6 +163,12 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **4.2** — Firefox Android / m.youtube.com support (beta): `ytm-*`
+  selector set for Shorts, comments, related, ads, chips, shelves,
+  mixes, merch/posts, channel info, mute list and autoplay-off; mobile
+  mute-list matching via `.media-item-headline`; canary restricted to
+  desktop so mobile can't log false strikes. 53-assertion suite with a
+  dedicated m.youtube.com fixture.
 - **4.1** — Discipline + resilience release. Per-page profiles (filters
   can be limited to Home/Watch/Search/Subs/Channels); Focus hours
   schedule that locks filters on (master switch, pause and shortcut all

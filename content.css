@@ -217,3 +217,81 @@ html[data-ytf-channel] ytd-c4-tabbed-header-renderer #channel-header,
 html[data-ytf-channel] ytd-c4-tabbed-header-renderer #channel-header-container {
   display: none !important;
 }
+
+
+/* ═══════════════════════════════════════════════
+   MOBILE (m.youtube.com) — ytm-* element set.
+   Same attr gates as desktop; player-level rules
+   (.ytp-*) already apply since the player is shared.
+   BETA: verified against fixtures, needs live-device
+   confirmation after YouTube mobile updates.
+   ═══════════════════════════════════════════════ */
+
+/* ── Shorts: shelves, items, bottom-nav tab, feed cards ── */
+html[data-ytf-shorts] ytm-reel-shelf-renderer,
+html[data-ytf-shorts] ytm-reel-item-renderer,
+html[data-ytf-shorts] ytm-rich-section-renderer:has(ytm-reel-shelf-renderer),
+html[data-ytf-shorts] ytm-pivot-bar-item-renderer:has(.pivot-shorts),
+html[data-ytf-shorts] ytm-pivot-bar-item-renderer:has([aria-label="Shorts"]),
+html[data-ytf-shorts] ytm-video-with-context-renderer:has(a[href^="/shorts"]),
+html[data-ytf-shorts] ytm-rich-item-renderer:has(a[href^="/shorts"]) {
+  display: none !important;
+}
+
+/* ── Comments ── */
+html[data-ytf-comments] ytm-comment-section-renderer,
+html[data-ytf-comments] ytm-comments-entry-point-header-renderer,
+html[data-ytf-comments] ytm-comments-simplebox-renderer,
+html[data-ytf-comments] ytm-item-section-renderer[section-identifier="comments-entry-point"],
+html[data-ytf-comments] ytm-item-section-renderer[section-identifier="comment-item-section"] {
+  display: none !important;
+}
+
+/* ── Related videos under the player ── */
+html[data-ytf-sidebar] ytm-item-section-renderer[section-identifier="related-items"],
+html[data-ytf-sidebar] ytm-watch-below-results {
+  display: none !important;
+}
+
+/* ── Filter chips ── */
+html[data-ytf-chips] ytm-chip-cloud-renderer,
+html[data-ytf-chips] ytm-feed-filter-chip-bar-renderer {
+  display: none !important;
+}
+
+/* ── Topic shelves / horizontal card lists ── */
+html[data-ytf-shelves] ytm-rich-section-renderer:not(:has(ytm-reel-shelf-renderer)),
+html[data-ytf-shelves] ytm-horizontal-card-list-renderer,
+html[data-ytf-shelves] ytm-search ytm-shelf-renderer {
+  display: none !important;
+}
+
+/* ── Ads ── */
+html[data-ytf-ads] ytm-promoted-video-renderer,
+html[data-ytf-ads] ytm-promoted-sparkles-web-renderer,
+html[data-ytf-ads] ytm-companion-ad-renderer,
+html[data-ytf-ads] ytm-ad-slot-renderer,
+html[data-ytf-ads] ytm-rich-item-renderer:has(ytm-ad-slot-renderer) {
+  display: none !important;
+}
+
+/* ── Merch & posts ── */
+html[data-ytf-merch] ytm-merch-shelf-renderer,
+html[data-ytf-merch] ytm-post-renderer,
+html[data-ytf-merch] ytm-backstage-post-renderer {
+  display: none !important;
+}
+
+/* ── Mixes & radio ── */
+html[data-ytf-mixes] ytm-radio-renderer,
+html[data-ytf-mixes] ytm-compact-radio-renderer,
+html[data-ytf-mixes] ytm-video-with-context-renderer:has(a[href*="start_radio=1"]),
+html[data-ytf-mixes] ytm-rich-item-renderer:has(a[href*="start_radio=1"]) {
+  display: none !important;
+}
+
+/* ── Channel info under video ── */
+html[data-ytf-owner] ytm-slim-owner-renderer,
+html[data-ytf-owner] ytm-channel-bar-renderer {
+  display: none !important;
+}

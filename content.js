@@ -30,14 +30,16 @@ const JS_RULES = {
       'ytd-reel-shelf-renderer',
       'ytd-reel-item-renderer',
       'ytd-video-renderer[is-shorts]',
+      'ytm-reel-shelf-renderer',
+      'ytm-reel-item-renderer',
     ].join(','),
     chipText: ['shorts'],
   },
   blockSidebar: {
-    selector: '#secondary,#related',
+    selector: '#secondary,#related,ytm-item-section-renderer[section-identifier="related-items"]',
   },
   blockComments: {
-    selector: '#comments,ytd-comments',
+    selector: '#comments,ytd-comments,ytm-comment-section-renderer,ytm-comments-entry-point-header-renderer',
   },
   blockActions: {
     selector: [
@@ -68,7 +70,7 @@ const JS_RULES = {
     ].join(','),
   },
   blockChips: {
-    selector: '#chips-wrapper,ytd-feed-filter-chip-bar-renderer',
+    selector: '#chips-wrapper,ytd-feed-filter-chip-bar-renderer,ytm-chip-cloud-renderer,ytm-feed-filter-chip-bar-renderer',
   },
   blockLeftNav: {
     selector: [
@@ -97,6 +99,10 @@ const JS_RULES = {
       // Promoted results in search
       'ytd-search-pyv-renderer',
       'ytd-promoted-video-renderer',
+      // Mobile (m.youtube.com)
+      'ytm-promoted-video-renderer',
+      'ytm-companion-ad-renderer',
+      'ytm-ad-slot-renderer',
     ].join(','),
   },
   blockEndscreen: {
@@ -118,6 +124,8 @@ const JS_RULES = {
       'ytd-ticket-shelf-renderer',
       'ytd-donation-shelf-renderer',
       'ytd-post-renderer',
+      'ytm-post-renderer',
+      'ytm-merch-shelf-renderer',
     ].join(','),
   },
   blockLiveChat: {
@@ -133,6 +141,8 @@ const JS_RULES = {
       'ytd-rich-item-renderer:has(a[href*="start_radio=1"])',
       'yt-lockup-view-model:has(a[href*="start_radio=1"])',
       'ytd-compact-video-renderer:has(a[href*="start_radio=1"])',
+      'ytm-radio-renderer',
+      'ytm-compact-radio-renderer',
     ].join(','),
   },
   hideOwner: {
@@ -140,6 +150,7 @@ const JS_RULES = {
       'ytd-watch-flexy ytd-video-owner-renderer',
       'ytd-watch-metadata #owner',
       'ytd-watch-flexy #upload-info',
+      'ytm-slim-owner-renderer',
     ].join(','),
   },
   minimalChannel: {
@@ -175,6 +186,11 @@ const MUTE_ITEM_SELECTOR = [
   'ytd-grid-video-renderer',
   'ytd-playlist-video-renderer',
   'yt-lockup-view-model',
+  // Mobile (m.youtube.com)
+  'ytm-video-with-context-renderer',
+  'ytm-compact-video-renderer',
+  'ytm-rich-item-renderer',
+  'ytm-media-item',
 ].join(',');
 
 // Nav entry rules — single pass for both Shorts + LeftNav
@@ -268,6 +284,8 @@ function skipVideoAd() {
 function forceAutoplayOff() {
   if (!activeHere() || !currentSettings.disableAutoplay) return;
   document.querySelector('.ytp-autonav-toggle-button[aria-checked="true"]')?.click();
+  // Mobile player exposes it as a pressed button
+  document.querySelector('.ytm-autonav-toggle-button-container[aria-pressed="true"]')?.click();
 }
 
 // ── "Video paused. Continue watching?" auto-dismiss ──
@@ -322,7 +340,7 @@ function applyMuteList() {
 
   document.querySelectorAll(MUTE_ITEM_SELECTOR).forEach(item => {
     if (!active) { showEl(item); return; }
-    const title   = item.querySelector('#video-title, h3')?.textContent || '';
+    const title   = item.querySelector('#video-title, h3, .media-item-headline')?.textContent || '';
     const channel = item.querySelector('ytd-channel-name, .yt-lockup-metadata-view-model__metadata')?.textContent || '';
     const hay = (title + ' ' + channel).toLowerCase();
     terms.some(t => hay.includes(t)) ? hideEl(item) : showEl(item);
@@ -530,6 +548,7 @@ const CANARIES = [
 ];
 
 function runCanaryCheck() {
+  if (location.hostname !== 'www.youtube.com') return;
   if (!location.pathname.startsWith('/watch')) return;
   return browser.storage.local.get('ytfCanary').then(res => {
     const fails = (res.ytfCanary && res.ytfCanary.fails) || {};
