@@ -197,3 +197,6 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
   when Shorts blocking is on (the hidden player used to leave a blank
   page); added build script + docs.
 - **3.0** — Per-feature toggles, popup UI, channel-page cleanup.
+
+---
+<sub>Support development — <a href="https://ko-fi.com/midwestmysterymeat">Ko-fi</a></sub>
