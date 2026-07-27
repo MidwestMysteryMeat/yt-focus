@@ -272,11 +272,13 @@ document.getElementById('muteInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') addMuteTerm();
 });
 
-// ── Ko-fi link: open in a tab (popup pages can't navigate themselves) ──
-document.getElementById('kofi').addEventListener('click', (e) => {
-  e.preventDefault();
-  browser.tabs.create({ url: 'https://ko-fi.com/midwestmysterymeat' });
-  window.close();
+// ── Ko-fi links: open in a tab (popup pages can't navigate themselves) ──
+['kofi', 'kofiLink'].forEach(id => {
+  document.getElementById(id).addEventListener('click', (e) => {
+    e.preventDefault();
+    browser.tabs.create({ url: 'https://ko-fi.com/midwestmysterymeat' });
+    window.close();
+  });
 });
 
 // ── Backup: export/import all settings as JSON ──
