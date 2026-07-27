@@ -298,6 +298,7 @@ async function testSpotify() {
     </div>
     <audio></audio>
     <div data-testid="ad-slot"><span>leaderboard</span></div>
+    <div data-testid="right-sidebar"><div>sidebar ad panel</div></div>
   </body></html>`;
 
   const dom = new JSDOM(html, {
@@ -331,11 +332,20 @@ async function testSpotify() {
       t('track playing: not muted', audio.muted === false);
       t('visual ad banner hidden', slot.style.display === 'none');
 
+      const breakHidden = () => {
+        const sb = document.querySelector('[data-testid="right-sidebar"]');
+        return document.documentElement.classList.contains('ytf-spotify-ad-break')
+          && getComputedStyle(sb).visibility === 'hidden';
+      };
+      t('no ad: sidebar panel visible', !breakHidden());
+
       ad(); tick();
       t('ad detected (title): muted', audio.muted === true);
+      t('ad break: sidebar panel + now-playing widget hidden', breakHidden());
 
       song(); tick();
       t('track resumes: unmuted', audio.muted === false);
+      t('ad break over: sidebar panel restored', !breakHidden());
 
       // User had muted it themselves — that state must survive the ad.
       audio.muted = true;

@@ -78,9 +78,10 @@ function setMuted(m) {
 }
 
 function tick() {
+  const isAd = adPlaying();
   const active = currentSettings.enabled && currentSettings.spotifyMuteAds;
 
-  if (active && adPlaying()) {
+  if (active && isAd) {
     if (!adMuted) {
       adMuted = true;
       userMutedBefore = [...mediaEls()].some(el => el.muted);
@@ -92,19 +93,56 @@ function tick() {
     if (!userMutedBefore) setMuted(false);
   }
 
-  hideAdUI();
+  hideAdUI(isAd);
 }
 
 // ── Visual ad units ──
+// Two layers:
+//  1. AD_UI_SELECTOR — elements that are ALWAYS ad units (ad testids, ad
+//     network iframes). Hidden whenever the setting is on.
+//  2. Break-only surfaces — the right-sidebar panel ("Your music will
+//     continue after the break" + Learn more card) and the now-playing
+//     widget carry NO ad-specific markup during a break; the ad renders
+//     as ordinary panel content. They can only be hidden POSITIONALLY
+//     while an ad is detected, via a root class + injected CSS, and are
+//     restored the moment the break ends.
 const AD_UI_SELECTOR = [
   '[data-testid="ad-slot"]',
   '[data-testid*="advert"]',
+  '[data-testid*="AdSlot"]',
   'iframe[src*="doubleclick.net"]',
   'iframe[src*="adform"]',
+  'iframe[src*="googlesyndication"]',
 ].join(',');
 
-function hideAdUI() {
+const BREAK_CLASS = 'ytf-spotify-ad-break';
+const BREAK_SURFACES = [
+  '[data-testid="right-sidebar"]',
+  '[data-testid="NPV_Panel"]',
+  '#Desktop_PanelContainer_Id',
+  '[data-testid="now-playing-widget"]',
+];
+// visibility (not display) so the layout doesn't jump when the break ends.
+const BREAK_CSS = BREAK_SURFACES
+  .map(s => 'html.' + BREAK_CLASS + ' ' + s)
+  .join(',') + '{visibility:hidden !important;}';
+
+let breakStyleEl = null;
+function ensureBreakStyle() {
+  if (breakStyleEl && breakStyleEl.isConnected) return;
+  breakStyleEl = document.createElement('style');
+  breakStyleEl.textContent = BREAK_CSS;
+  // documentElement, not head: head may not exist at document_start, and
+  // Spotify never rewrites the root, so the style survives SPA renders.
+  document.documentElement.appendChild(breakStyleEl);
+}
+
+function hideAdUI(isAd) {
   const active = currentSettings.enabled && currentSettings.spotifyHideAdUI;
+
+  ensureBreakStyle();
+  document.documentElement.classList.toggle(BREAK_CLASS, active && isAd);
+
   document.querySelectorAll(AD_UI_SELECTOR).forEach(el => {
     if (active) {
       if (el.style.display !== 'none') el.style.setProperty('display', 'none', 'important');

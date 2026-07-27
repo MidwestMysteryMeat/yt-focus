@@ -164,6 +164,15 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **4.4** — Spotify ad-break visual coverage. The sidebar ad panel
+  ("Your music will continue after the break" / "Learn more" card) and
+  the ad branding in the now-playing bar carry no ad-specific markup, so
+  they escaped the ad-unit selectors. They are now hidden positionally
+  while an ad is detected — a root class + injected CSS blanks the
+  right-sidebar panel and now-playing widget for the break, then
+  restores them (visibility, not display, so layout doesn't jump).
+  Ad-unit selectors extended (`AdSlot` testids, googlesyndication
+  iframes). Suite now 60 assertions.
 - **4.3** — Localization + mobile polish. New shared `L10N` word tables
   (~13 locales) behind the few rules that must text-match: channel
   tabs/shelf titles (Publicaciones, Beiträge, ストア…), left-nav
