@@ -25,15 +25,30 @@ const CONTENT_LINK = 'a[href*="/track/"],a[href*="/episode/"],a[href*="/album/"]
 let linklessPolls = 0;
 
 function adPlaying() {
-  if (/^advertisement\b/i.test(document.title)) return true;
-
   const widget = document.querySelector('[data-testid="now-playing-widget"]');
+  const hasContentLink = !!(widget && widget.querySelector(CONTENT_LINK));
+
+  // Title formats seen for ads: "Advertisement", "Advertisement · Spotify",
+  // "Spotify – Advertisement". A real track NAMED "Advertisement" produces
+  // the same title shape — but a real track always has a content link in
+  // the widget and an ad never does, so the link exonerates it.
+  if (/^(spotify\s*[–—-]\s*)?advertisement\b/i.test(document.title) && !hasContentLink) {
+    return true;
+  }
+
   if (!widget) { linklessPolls = 0; return false; }
 
-  const label = (widget.getAttribute('aria-label') || '') + ' ' + widget.textContent;
-  if (/advertisement|advertiser/i.test(label)) return true;
+  // aria-label only — widget textContent is the ad's brand name for real
+  // ads, and song/artist names containing "advertisement" would false-mute.
+  // Same exoneration as the title: a track named "Advertisement" has aria
+  // "Now playing: Advertisement by X" AND a content link; a real ad never
+  // has the link.
+  if (!hasContentLink
+      && /advertisement|advertiser/i.test(widget.getAttribute('aria-label') || '')) {
+    return true;
+  }
 
-  if (widget.textContent.trim() && !widget.querySelector(CONTENT_LINK)) {
+  if (widget.textContent.trim() && !hasContentLink) {
     linklessPolls++;
     return linklessPolls >= 2;
   }

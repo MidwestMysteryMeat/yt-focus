@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "3.4",
+  "version": "3.5",
   "description": "Blocks YouTube Shorts, comments, recommendations and sidebar clutter. Mutes Spotify web-player ads.",
   "icons": {
     "48": "icons/icon48.png",

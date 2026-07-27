@@ -1,0 +1,6 @@
+{
+  "name": "yt-focus-dev",
+  "private": true,
+  "scripts": { "test": "node tests/run_tests.js" },
+  "devDependencies": { "jsdom": "^25.0.1" }
+}

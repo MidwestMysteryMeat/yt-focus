@@ -83,6 +83,15 @@ const JS_RULES = {
       'ytd-display-ad-renderer',
       'ytd-promoted-sparkles-web-renderer',
       'ytd-banner-promo-renderer',
+      // Watch-page companion/side ads (banner beside the player). Without
+      // these, Ads only appeared to work because blockSidebar removed
+      // #secondary entirely — Ads must stand alone.
+      'ytd-companion-slot-renderer',
+      'ytd-action-companion-ad-renderer',
+      'ytd-player-legacy-desktop-watch-ads-renderer',
+      // Promoted results in search
+      'ytd-search-pyv-renderer',
+      'ytd-promoted-video-renderer',
     ].join(','),
   },
   blockEndscreen: {

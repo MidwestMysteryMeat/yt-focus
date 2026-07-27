@@ -22,7 +22,7 @@ mutes ads on the Spotify web player.
 | Action Bar | Like / dislike / share / ask / save row |
 | Description & Ask | Description box, Ask panel, chapters, transcript |
 | End Screens & Cards | Video-end recommendation wall, in-video card teasers |
-| Ads | Display/in-feed/masthead ads; video ads are auto-skipped (seek to end + click Skip) |
+| Ads | Display/in-feed/masthead ads, watch-page companion (side) ads, promoted search results; video ads are auto-skipped (seek to end + click Skip) |
 | Live Chat | Chat panel on streams & premieres |
 | Stop Autoplay | Forces the player's "autoplay next" toggle off |
 | Shorts | Shelves, nav links, search results — and redirects `/shorts/<id>` to the normal `/watch` player |
@@ -97,6 +97,21 @@ Load Temporary Add-on → pick `manifest.json`.
 ./build.ps1   # → dist/yt-focus-v<version>.zip (AMO-ready)
 ```
 
+## Tests
+
+```powershell
+npm install   # once (jsdom)
+npm test      # runs the real content scripts in jsdom ad fixtures
+```
+
+The harness loads the unmodified extension scripts into DOM fixtures of
+YouTube/Spotify ad states and asserts what gets hidden, muted and
+restored — including the master switch, per-toggle independence, the
+user's own mute state surviving a Spotify ad, and the false-positive
+guards (a track literally named "Advertisement", a mid-load linkless
+widget). It proves the logic; it cannot prove YouTube/Spotify still use
+these DOM shapes — that only shows up in a live session.
+
 ## Known gaps
 
 - `m.youtube.com` (Firefox Android) uses a completely different DOM
@@ -111,6 +126,12 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **3.5** — Ads toggle now also covers watch-page companion/side ads and
+  promoted search results (previously they only vanished as a side effect
+  of the sidebar toggle); Spotify ad detection hardened (title-format
+  variants, and a track literally named "Advertisement" is no longer
+  muted — a content link in the now-playing widget exonerates all text
+  signals); jsdom test harness (29 assertions over the real scripts).
 - **3.4** — Spotify web-player support: audio ads auto-muted (with the
   user's own mute state restored afterwards), visual ad units hidden;
   new `spotify.js` content script + popup section.
