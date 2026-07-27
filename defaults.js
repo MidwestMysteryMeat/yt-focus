@@ -30,6 +30,16 @@ const DEFAULTS = {
   defaultTheater:   false,  // enter theater mode on each new video
   playbackSpeed:    0,      // default speed per new video; 0 = leave alone
   pausedUntil:      0,      // epoch ms; timed pause auto-resumes then (0 = none)
+  pageHome:         true,   // per-page profiles: where filters apply
+  pageWatch:        true,
+  pageSearch:       true,
+  pageSubs:         true,
+  pageChannel:      true,
+  scheduleEnabled:  false,  // focus hours: force filters on during the window
+  scheduleStart:    '09:00',
+  scheduleEnd:      '17:00',
+  scheduleDays:     [1, 2, 3, 4, 5],  // getDay() values; Mon–Fri
+  strictOff:        false,  // slow off-switch: 10s countdown to turn off
   muteList:         [],     // hide videos matching these words/channels
 };
 
@@ -43,10 +53,33 @@ async function loadSettings() {
   let stored = await STORE.get(null);
   if (Object.keys(stored).length === 0) {
     const legacy = await browser.storage.local.get(null);
-    if (Object.keys(legacy).length > 0) {
-      await STORE.set(legacy);
-      stored = legacy;
+    // Migrate only known settings keys — storage.local also holds
+    // transient state like the selector-canary results.
+    const known = {};
+    for (const key of Object.keys(DEFAULTS)) {
+      if (key in legacy) known[key] = legacy[key];
+    }
+    if (Object.keys(known).length > 0) {
+      await STORE.set(known);
+      stored = known;
     }
   }
   return { ...DEFAULTS, ...stored };
+}
+
+// ── Focus-hours helper (shared by background.js + popup.js) ──
+// True while the schedule forces filters on. Windows may cross midnight
+// (start > end). An empty day list means every day.
+function inFocusWindow(settings, now = new Date()) {
+  if (!settings.scheduleEnabled) return false;
+  const days = Array.isArray(settings.scheduleDays) ? settings.scheduleDays : [];
+  if (days.length > 0 && !days.includes(now.getDay())) return false;
+  const hm = s => {
+    const [h, m] = String(s || '').split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const t = now.getHours() * 60 + now.getMinutes();
+  const a = hm(settings.scheduleStart);
+  const b = hm(settings.scheduleEnd);
+  return a <= b ? (t >= a && t < b) : (t >= a || t < b);
 }

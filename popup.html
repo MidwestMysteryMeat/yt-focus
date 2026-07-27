@@ -69,6 +69,77 @@
     input:checked + .slider::before { transform: translateX(15px); background: #fff; }
     input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+    /* ── Canary warning ── */
+    #canaryWarn {
+      display: none;
+      margin: 8px 16px 0;
+      padding: 7px 10px;
+      background: rgba(255, 170, 0, 0.08);
+      border: 1px solid rgba(255, 170, 0, 0.4);
+      border-radius: 6px;
+      font-size: 10px;
+      line-height: 1.45;
+      color: #e6b45a;
+    }
+    #canaryWarn.show { display: block; }
+
+    /* ── Page pills ── */
+    .pill-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px 12px; }
+    .pill { position: relative; }
+    .pill input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+    .pill span {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--raised);
+      color: var(--muted);
+      font-size: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .pill input:checked + span {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(255, 59, 48, 0.12);
+    }
+    .pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .pill-hint { padding: 0 16px 4px; font-size: 10px; color: var(--faint); }
+
+    /* ── Focus hours ── */
+    .sched-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 16px 2px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .sched-row input[type="time"] {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 5px;
+      font-size: 11px;
+      padding: 3px 5px;
+      font-family: Consolas, monospace;
+    }
+    .day-row { display: flex; gap: 4px; padding: 6px 16px 12px; }
+    .day {
+      width: 26px; height: 22px;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: var(--raised);
+      color: var(--muted);
+      font-size: 10px;
+      cursor: pointer;
+    }
+    .day.on {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(255, 59, 48, 0.12);
+    }
+
     /* ── Timed pause ── */
     .pause-row { padding: 8px 16px; border-bottom: 1px solid var(--line); }
     #pauseBtn {
@@ -232,6 +303,12 @@
   </label>
 </header>
 
+<div id="canaryWarn">
+  <strong>YouTube changed its layout.</strong> Some filters may have
+  stopped matching on watch pages. Everything else keeps working —
+  an extension update is needed.
+</div>
+
 <div class="pause-row">
   <button id="pauseBtn">Pause for 10 min</button>
 </div>
@@ -350,6 +427,46 @@
   </div>
 </details>
 
+<details data-section="pages" data-nocount>
+  <summary><span class="sec-title">Where Filters Run</span><span class="sec-count"></span></summary>
+  <div class="pill-hint">Filters only apply on the selected pages — e.g. strict Home, untouched Watch.</div>
+  <div class="pill-row">
+    <label class="pill"><input type="checkbox" id="pageHome"/><span>Home</span></label>
+    <label class="pill"><input type="checkbox" id="pageWatch"/><span>Watch</span></label>
+    <label class="pill"><input type="checkbox" id="pageSearch"/><span>Search</span></label>
+    <label class="pill"><input type="checkbox" id="pageSubs"/><span>Subscriptions</span></label>
+    <label class="pill"><input type="checkbox" id="pageChannel"/><span>Channels</span></label>
+  </div>
+</details>
+
+<details data-section="discipline" data-nocount>
+  <summary><span class="sec-title">Focus Discipline</span><span class="sec-count"></span></summary>
+
+  <div class="toggle-row" data-key="scheduleEnabled">
+    <div class="toggle-info"><strong>Focus hours</strong><span>Filters lock on during this window</span></div>
+    <label class="switch"><input type="checkbox" id="scheduleEnabled"/><span class="slider"></span></label>
+  </div>
+  <div class="sched-row">
+    <input type="time" id="scheduleStart" value="09:00"/>
+    <span>to</span>
+    <input type="time" id="scheduleEnd" value="17:00"/>
+  </div>
+  <div class="day-row" id="dayRow">
+    <button class="day" data-day="0">S</button>
+    <button class="day" data-day="1">M</button>
+    <button class="day" data-day="2">T</button>
+    <button class="day" data-day="3">W</button>
+    <button class="day" data-day="4">T</button>
+    <button class="day" data-day="5">F</button>
+    <button class="day" data-day="6">S</button>
+  </div>
+
+  <div class="toggle-row" data-key="strictOff">
+    <div class="toggle-info"><strong>Slow off-switch</strong><span>Turning off waits 10 s — timed pause stays instant</span></div>
+    <label class="switch"><input type="checkbox" id="strictOff"/><span class="slider"></span></label>
+  </div>
+</details>
+
 <details data-section="spotify">
   <summary><span class="sec-title">Spotify Web Player</span><span class="sec-count"></span></summary>
 
@@ -379,7 +496,7 @@
   <textarea id="backupBox" spellcheck="false" placeholder="Export fills this box (and copies to clipboard). Paste a backup here and hit Import to restore."></textarea>
 </div>
 
-<footer><span>v4.0</span><span>Alt+Shift+Y pauses</span></footer>
+<footer><span>v4.1</span><span>Alt+Shift+Y pauses</span></footer>
 
 <script src="defaults.js"></script>
 <script src="popup.js"></script>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "YT Focus",
-  "version": "4.0",
+  "version": "4.1",
   "description": "Declutter YouTube your way: Shorts, comments, recommendations, ads, clickbait — every filter is a toggle. Timed pause, playback defaults, right-click channel muting. Also mutes Spotify web-player ads.",
   "icons": {
     "48": "icons/icon48.png",

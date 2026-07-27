@@ -192,14 +192,44 @@ const BLOCKED_TAB_LABELS = ['shorts', 'posts', 'store'];
 
 let currentSettings = { ...DEFAULTS };
 
+// ── Per-page profiles ──
+// Filters can be switched off for whole page types ("strict on home,
+// lenient on watch"). Unknown pages (history, playlists…) always filter.
+const PAGE_KEY = {
+  home: 'pageHome',
+  watch: 'pageWatch',
+  search: 'pageSearch',
+  subs: 'pageSubs',
+  channel: 'pageChannel',
+};
+
+function pageType() {
+  const p = location.pathname;
+  if (p === '/') return 'home';
+  if (p.startsWith('/watch')) return 'watch';
+  if (p.startsWith('/results')) return 'search';
+  if (p.startsWith('/feed/subscriptions')) return 'subs';
+  if (p.startsWith('/@') || p.startsWith('/channel/')
+      || p.startsWith('/c/') || p.startsWith('/user/')) return 'channel';
+  return 'other';
+}
+
+// Master switch AND this page type's profile both on
+function activeHere() {
+  if (!currentSettings.enabled) return false;
+  const key = PAGE_KEY[pageType()];
+  return key ? currentSettings[key] !== false : true;
+}
+
 // ── Apply data attributes to <html> so CSS rules activate/deactivate ──
 // data-ytf-on gates the always-on CSS; per-feature attrs gate their rules.
 // Master switch off ⇒ no attrs at all ⇒ every CSS rule goes inert.
 function applyAttrs() {
   const root = document.documentElement;
-  root.toggleAttribute('data-ytf-on', !!currentSettings.enabled);
+  const on = activeHere();
+  root.toggleAttribute('data-ytf-on', on);
   for (const [key, attr] of Object.entries(ATTR_MAP)) {
-    root.toggleAttribute(attr, !!(currentSettings.enabled && currentSettings[key]));
+    root.toggleAttribute(attr, !!(on && currentSettings[key]));
   }
 }
 
@@ -220,7 +250,7 @@ function showEl(el) {
 // click Skip as soon as it exists. No mute/rate changes — nothing to
 // restore when the real video resumes.
 function skipVideoAd() {
-  if (!currentSettings.enabled || !currentSettings.blockAds) return;
+  if (!activeHere() || !currentSettings.blockAds) return;
   const player = document.querySelector('#movie_player.ad-showing');
   if (!player) return;
   const video = player.querySelector('video');
@@ -236,7 +266,7 @@ function skipVideoAd() {
 // Clicking the toggle flips aria-checked to false, so this never loops;
 // if YouTube (or the user) turns it back on, the next scrub re-disables it.
 function forceAutoplayOff() {
-  if (!currentSettings.enabled || !currentSettings.disableAutoplay) return;
+  if (!activeHere() || !currentSettings.disableAutoplay) return;
   document.querySelector('.ytp-autonav-toggle-button[aria-checked="true"]')?.click();
 }
 
@@ -244,7 +274,7 @@ function forceAutoplayOff() {
 // The idle interrupt that pauses long sessions. Grouped under
 // disableAutoplay: both are "let the video just play" controls.
 function dismissContinueWatching() {
-  if (!currentSettings.enabled || !currentSettings.disableAutoplay) return;
+  if (!activeHere() || !currentSettings.disableAutoplay) return;
   const dialog = document.querySelector('yt-confirm-dialog-renderer');
   if (dialog && /continue watching/i.test(dialog.textContent || '')) {
     const btn = dialog.querySelector('#confirm-button button')
@@ -259,7 +289,7 @@ function dismissContinueWatching() {
 let speedAppliedFor = null;
 let theaterAppliedFor = null;
 function applyPlaybackDefaults() {
-  if (!currentSettings.enabled) return;
+  if (!activeHere()) return;
   const id = new URLSearchParams(location.search).get('v');
   if (!id) return;
 
@@ -288,7 +318,7 @@ function applyMuteList() {
   const terms = (currentSettings.muteList || [])
     .map(t => String(t).toLowerCase())
     .filter(Boolean);
-  const active = currentSettings.enabled && terms.length > 0;
+  const active = activeHere() && terms.length > 0;
 
   document.querySelectorAll(MUTE_ITEM_SELECTOR).forEach(item => {
     if (!active) { showEl(item); return; }
@@ -323,7 +353,7 @@ function smartSentenceCase(t) {
 }
 
 function applyClickbait() {
-  const active = currentSettings.enabled && currentSettings.deClickbait;
+  const active = activeHere() && currentSettings.deClickbait;
 
   document.querySelectorAll('#video-title').forEach(el => {
     if (active) {
@@ -367,7 +397,7 @@ function applyClickbait() {
 // Runs AFTER applyMuteList in scrub — mute's showEl pass would otherwise
 // undo these hides.
 function applyWatched() {
-  const active = currentSettings.enabled && currentSettings.hideWatched;
+  const active = activeHere() && currentSettings.hideWatched;
   document.querySelectorAll('ytd-thumbnail-overlay-resume-playback-renderer #progress')
     .forEach(bar => {
       const item = bar.closest(MUTE_ITEM_SELECTOR);
@@ -379,7 +409,7 @@ function applyWatched() {
 
 // ── Main scrub ──
 function scrub() {
-  const on = currentSettings.enabled;
+  const on = activeHere();
   const channelStrip = on && currentSettings.minimalChannel;
 
   // ─ minimalChannel: channel shelf titles (text-matched) ─
@@ -473,28 +503,60 @@ function startObserver() {
 // Only runs after settings load, so a disabled toggle is respected.
 let settingsLoaded = false;
 function redirectShorts() {
-  if (!settingsLoaded || !currentSettings.enabled || !currentSettings.blockShorts) return;
+  if (!settingsLoaded || !activeHere() || !currentSettings.blockShorts) return;
   const m = location.pathname.match(/^\/shorts\/([A-Za-z0-9_-]+)/);
   if (m) location.replace('/watch?v=' + m[1]);
 }
 
 // ── Home → Subscriptions redirect (opt-in) ──
 function redirectHome() {
-  if (!settingsLoaded || !currentSettings.enabled || !currentSettings.redirectHome) return;
+  if (!settingsLoaded || !activeHere() || !currentSettings.redirectHome) return;
   if (location.pathname === '/' && !location.search) {
     location.replace('/feed/subscriptions');
   }
 }
 
+// ── Selector self-test (canary) ──
+// Structural elements that MUST exist on every watch page. If one goes
+// missing on consecutive watch loads, YouTube probably renamed it — and
+// some hide rules are silently dead. Counts live in storage.local; the
+// popup shows a warning and the toolbar icon gets a badge at 3 strikes,
+// so breakage is announced instead of discovered by the user.
+const CANARIES = [
+  ['player',         '#movie_player'],
+  ['sidebar',        '#secondary'],
+  ['comments',       'ytd-comments'],
+  ['video metadata', 'ytd-watch-metadata'],
+];
+
+function runCanaryCheck() {
+  if (!location.pathname.startsWith('/watch')) return;
+  return browser.storage.local.get('ytfCanary').then(res => {
+    const fails = (res.ytfCanary && res.ytfCanary.fails) || {};
+    let changed = false;
+    for (const [name, sel] of CANARIES) {
+      const next = document.querySelector(sel) ? 0 : (fails[name] || 0) + 1;
+      if (next !== (fails[name] || 0)) { fails[name] = next; changed = true; }
+    }
+    if (changed) {
+      return browser.storage.local.set({ ytfCanary: { fails, ts: Date.now() } });
+    }
+  });
+}
+
 // ── YouTube SPA navigation hook ──
 // Uses scheduleScrub for the early pass (deduplicates with observer),
-// direct scrub at 800ms to catch late-rendering elements.
+// direct scrub at 800ms to catch late-rendering elements. applyAttrs
+// re-runs because the page type (per-page profiles) may have changed.
 window.addEventListener('yt-navigate-finish', () => {
+  applyAttrs();
   redirectShorts();
   redirectHome();
   scheduleScrub();
   setTimeout(scrub, 800);
+  setTimeout(runCanaryCheck, 3000);
 });
+setTimeout(runCanaryCheck, 3000);
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {

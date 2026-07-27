@@ -46,6 +46,24 @@ live on-counts; everything is a toggle — nothing is forced on you):
 **Right-click any channel link** → "YT Focus: mute this channel" adds it
 straight to the mute list — no typing.
 
+**Per-page profiles** — choose where filters run (Home / Watch / Search /
+Subscriptions / Channels). Strict on the home page, untouched on watch
+pages, or any mix; unknown pages always filter.
+
+**Focus discipline (all opt-in):**
+
+- **Focus hours** — a scheduled window (times + weekdays, may cross
+  midnight) during which filters lock on: the master switch, timed
+  pause and keyboard shortcut are all refused until the window ends.
+- **Slow off-switch** — turning the extension off takes a 10-second
+  countdown (click again to cancel). The 10-minute timed pause stays
+  instant, because it turns itself back on.
+
+**Selector self-test** — every watch page load checks that YouTube's
+structural elements still exist. Three consecutive misses ⇒ a `!` badge
+on the toolbar icon and a banner in the popup saying YouTube changed
+its layout, instead of filters dying silently.
+
 **Spotify (web player, `open.spotify.com` only)** — two toggles:
 
 | Toggle | Does |
@@ -133,6 +151,14 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **4.1** — Discipline + resilience release. Per-page profiles (filters
+  can be limited to Home/Watch/Search/Subs/Channels); Focus hours
+  schedule that locks filters on (master switch, pause and shortcut all
+  refused inside the window, background re-enables every 30 s); opt-in
+  slow off-switch (10 s countdown, cancellable — timed pause stays
+  instant); selector self-test canary (3 consecutive watch-page misses
+  ⇒ toolbar `!` badge + popup banner instead of silent breakage);
+  settings migration now copies only known keys. 43-assertion suite.
 - **4.0** — Retention/parity release. Every formerly always-on hide is
   now a toggle (Channel info under video, Minimal channel pages, Top bar
   buttons — all opt-in, so a fresh install no longer hides the Subscribe

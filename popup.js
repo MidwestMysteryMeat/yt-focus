@@ -1,43 +1,53 @@
-// DEFAULTS / STORE / loadSettings come from defaults.js (loaded first
-// in popup.html). Checkbox rows cover the boolean settings; the speed
-// select, timed pause, mute list and backup have their own handlers.
+// DEFAULTS / STORE / loadSettings / inFocusWindow come from defaults.js
+// (loaded first in popup.html). Checkbox rows cover the boolean
+// settings; the speed select, timed pause, focus hours, mute list and
+// backup have their own handlers.
 const boolKeys = Object.keys(DEFAULTS).filter(k => typeof DEFAULTS[k] === 'boolean');
+let current = { ...DEFAULTS };
 let muteList = [];
-let currentEnabled = DEFAULTS.enabled;
-let currentPausedUntil = 0;
 
 // ── Status line + per-section counts ──
 function fmtTime(ts) {
   return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
-function updateStatus() {
-  document.body.classList.toggle('paused', !currentEnabled);
+function locked() {
+  return current.enabled && inFocusWindow(current);
+}
+
+function updateStatus(flash) {
+  document.body.classList.toggle('paused', !current.enabled);
 
   let on = 0, total = 0;
   document.querySelectorAll('details').forEach(sec => {
+    const count = sec.querySelector('.sec-count');
+    if (sec.hasAttribute('data-nocount')) { count.textContent = ''; return; }
     const boxes = sec.querySelectorAll('input[type="checkbox"]');
     const secOn = [...boxes].filter(b => b.checked).length;
     on += secOn; total += boxes.length;
-    const count = sec.querySelector('.sec-count');
     count.textContent = secOn + '/' + boxes.length;
-    count.classList.toggle('live', currentEnabled && secOn > 0);
+    count.classList.toggle('live', current.enabled && secOn > 0);
   });
 
   const status = document.getElementById('statusLine');
-  if (currentEnabled) {
+  if (flash) {
+    status.textContent = flash;
+  } else if (locked()) {
+    status.textContent = on + ' of ' + total + ' filters on · focus hours until '
+      + (current.scheduleEnd || '');
+  } else if (current.enabled) {
     status.textContent = on + ' of ' + total + ' filters on';
-  } else if (currentPausedUntil > Date.now()) {
-    status.textContent = 'Paused — resumes ' + fmtTime(currentPausedUntil);
+  } else if (current.pausedUntil > Date.now()) {
+    status.textContent = 'Paused — resumes ' + fmtTime(current.pausedUntil);
   } else {
     status.textContent = 'Paused';
   }
 
   const pauseBtn = document.getElementById('pauseBtn');
-  pauseBtn.textContent = currentEnabled
-    ? 'Pause for 10 min'
-    : (currentPausedUntil > Date.now()
-        ? 'Resume now (auto ' + fmtTime(currentPausedUntil) + ')'
+  pauseBtn.textContent = current.enabled
+    ? (locked() ? 'Focus hours — pause locked' : 'Pause for 10 min')
+    : (current.pausedUntil > Date.now()
+        ? 'Resume now (auto ' + fmtTime(current.pausedUntil) + ')'
         : 'Resume');
 }
 
@@ -50,26 +60,42 @@ function save() {
   });
   settings.playbackSpeed = parseFloat(document.getElementById('playbackSpeed').value) || 0;
 
+  Object.assign(current, settings);
   // Content scripts pick this up via storage.onChanged — no messaging needed
-  currentEnabled = settings.enabled;
   STORE.set(settings);
   updateStatus();
 }
 
+function renderDays() {
+  const days = Array.isArray(current.scheduleDays) ? current.scheduleDays : [];
+  document.querySelectorAll('#dayRow .day').forEach(btn => {
+    btn.classList.toggle('on', days.includes(Number(btn.dataset.day)));
+  });
+}
+
 function loadIntoUI(settings) {
+  current = { ...DEFAULTS, ...settings };
   boolKeys.forEach(key => {
     const el = document.getElementById(key);
-    if (el) el.checked = !!settings[key];
+    if (el) el.checked = !!current[key];
   });
-  document.getElementById('playbackSpeed').value = String(settings.playbackSpeed || 0);
-  muteList = Array.isArray(settings.muteList) ? settings.muteList.map(String) : [];
-  currentEnabled = !!settings.enabled;
-  currentPausedUntil = settings.pausedUntil || 0;
+  document.getElementById('playbackSpeed').value = String(current.playbackSpeed || 0);
+  document.getElementById('scheduleStart').value = current.scheduleStart || '09:00';
+  document.getElementById('scheduleEnd').value = current.scheduleEnd || '17:00';
+  muteList = Array.isArray(current.muteList) ? current.muteList.map(String) : [];
+  renderDays();
   renderMuteList();
   updateStatus();
 }
 
 loadSettings().then(loadIntoUI);
+
+// Selector canary: show the "YouTube changed" banner after 3 strikes
+browser.storage.local.get('ytfCanary').then(res => {
+  const fails = (res.ytfCanary && res.ytfCanary.fails) || {};
+  const broken = Object.values(fails).some(n => n >= 3);
+  document.getElementById('canaryWarn').classList.toggle('show', broken);
+});
 
 // Refresh live if the background auto-resumes (or another window changes
 // settings) while this popup is open.
@@ -78,26 +104,77 @@ browser.storage.onChanged.addListener(async (changes, area) => {
   loadIntoUI(await loadSettings());
 });
 
-// ── Master switch: a manual flip always cancels a pending timed pause ──
+// ── Master switch ──
+// A manual flip cancels a pending timed pause. During focus hours,
+// turning off is refused. With the slow off-switch on, turning off
+// starts a 10 s countdown; a second click cancels it.
+let offTimer = null;
+let offLeft = 0;
+
+function cancelOffCountdown() {
+  clearInterval(offTimer);
+  offTimer = null;
+  updateStatus();
+}
+
 document.getElementById('enabled').addEventListener('change', (e) => {
-  currentEnabled = e.target.checked;
-  currentPausedUntil = 0;
-  STORE.set({ enabled: currentEnabled, pausedUntil: 0 });
+  const box = e.target;
+
+  if (offTimer) {           // countdown running — this click cancels it
+    box.checked = true;
+    cancelOffCountdown();
+    updateStatus('Kept on.');
+    return;
+  }
+
+  if (!box.checked && locked()) {
+    box.checked = true;
+    updateStatus('Focus hours — locked until ' + (current.scheduleEnd || ''));
+    return;
+  }
+
+  if (!box.checked && current.strictOff) {
+    box.checked = true;     // stays on until the countdown finishes
+    offLeft = 10;
+    updateStatus('Turning off in ' + offLeft + ' s — click again to cancel');
+    offTimer = setInterval(() => {
+      offLeft--;
+      if (offLeft > 0) {
+        updateStatus('Turning off in ' + offLeft + ' s — click again to cancel');
+        return;
+      }
+      cancelOffCountdown();
+      box.checked = false;
+      current.enabled = false;
+      current.pausedUntil = 0;
+      STORE.set({ enabled: false, pausedUntil: 0 });
+      updateStatus();
+    }, 1000);
+    return;
+  }
+
+  current.enabled = box.checked;
+  current.pausedUntil = 0;
+  STORE.set({ enabled: current.enabled, pausedUntil: 0 });
   updateStatus();
 });
 
-// ── Timed pause ──
+// ── Timed pause (always instant — it self-heals) ──
 document.getElementById('pauseBtn').addEventListener('click', () => {
-  if (currentEnabled) {
-    currentEnabled = false;
-    currentPausedUntil = Date.now() + 10 * 60 * 1000;
-    STORE.set({ enabled: false, pausedUntil: currentPausedUntil });
+  if (current.enabled && locked()) {
+    updateStatus('Focus hours — locked until ' + (current.scheduleEnd || ''));
+    return;
+  }
+  if (current.enabled) {
+    current.enabled = false;
+    current.pausedUntil = Date.now() + 10 * 60 * 1000;
+    STORE.set({ enabled: false, pausedUntil: current.pausedUntil });
   } else {
-    currentEnabled = true;
-    currentPausedUntil = 0;
+    current.enabled = true;
+    current.pausedUntil = 0;
     STORE.set({ enabled: true, pausedUntil: 0 });
   }
-  document.getElementById('enabled').checked = currentEnabled;
+  document.getElementById('enabled').checked = current.enabled;
   updateStatus();
 });
 
@@ -123,6 +200,28 @@ boolKeys.filter(k => k !== 'enabled').forEach(key => {
 });
 
 document.getElementById('playbackSpeed').addEventListener('change', save);
+
+// ── Focus hours: time range + day picker ──
+['scheduleStart', 'scheduleEnd'].forEach(key => {
+  document.getElementById(key).addEventListener('change', (e) => {
+    const value = e.target.value || DEFAULTS[key];
+    current[key] = value;
+    STORE.set({ [key]: value });
+    updateStatus();
+  });
+});
+
+document.querySelectorAll('#dayRow .day').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const day = Number(btn.dataset.day);
+    const days = new Set(Array.isArray(current.scheduleDays) ? current.scheduleDays : []);
+    days.has(day) ? days.delete(day) : days.add(day);
+    current.scheduleDays = [...days].sort();
+    STORE.set({ scheduleDays: current.scheduleDays });
+    renderDays();
+    updateStatus();
+  });
+});
 
 // Remember which sections the user keeps open
 document.querySelectorAll('details').forEach(sec => {
@@ -196,12 +295,14 @@ document.getElementById('importBtn').addEventListener('click', async () => {
   const clean = {};
   for (const key of Object.keys(DEFAULTS)) {
     if (!(key in parsed) || key === 'pausedUntil') continue;
-    if (typeof DEFAULTS[key] === 'boolean' && typeof parsed[key] === 'boolean') {
-      clean[key] = parsed[key];
-    } else if (typeof DEFAULTS[key] === 'number' && typeof parsed[key] === 'number') {
+    const kind = typeof DEFAULTS[key];
+    if ((kind === 'boolean' || kind === 'number' || kind === 'string')
+        && typeof parsed[key] === kind) {
       clean[key] = parsed[key];
     } else if (key === 'muteList' && Array.isArray(parsed[key])) {
       clean[key] = parsed[key].map(String);
+    } else if (key === 'scheduleDays' && Array.isArray(parsed[key])) {
+      clean[key] = parsed[key].map(Number).filter(n => n >= 0 && n <= 6);
     }
   }
   await STORE.set(clean);

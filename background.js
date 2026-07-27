@@ -5,12 +5,53 @@
 // tab and the popup stay in step with no messaging.
 
 // ── Keyboard shortcut (manifest "commands") ──
-// A manual toggle always cancels a pending timed pause.
+// A manual toggle always cancels a pending timed pause. During focus
+// hours turning off is refused; with the slow off-switch on, the
+// shortcut downgrades "off" to a 10-minute timed pause (it self-heals).
 browser.commands.onCommand.addListener(async (command) => {
   if (command !== 'toggle-focus') return;
   const settings = await loadSettings();
-  await STORE.set({ enabled: !settings.enabled, pausedUntil: 0 });
+  if (!settings.enabled) {
+    await STORE.set({ enabled: true, pausedUntil: 0 });
+    return;
+  }
+  if (inFocusWindow(settings)) return;
+  if (settings.strictOff) {
+    await STORE.set({ enabled: false, pausedUntil: Date.now() + 10 * 60 * 1000 });
+  } else {
+    await STORE.set({ enabled: false, pausedUntil: 0 });
+  }
 });
+
+// ── Focus hours: force filters on inside the scheduled window ──
+// Checked every 30s (and at startup). Re-enabling also clears any
+// timed pause that would otherwise re-fire.
+async function enforceSchedule() {
+  const settings = await loadSettings();
+  if (inFocusWindow(settings) && !settings.enabled) {
+    await STORE.set({ enabled: true, pausedUntil: 0 });
+  }
+}
+setInterval(enforceSchedule, 30000);
+enforceSchedule();
+
+// ── Selector-canary badge ──
+// content.js counts consecutive watch-page loads where a structural
+// element is missing (storage.local.ytfCanary). Three strikes ⇒ badge,
+// so "YouTube changed, some rules are dead" is announced, not silent.
+function updateCanaryBadge(canary) {
+  const broken = Object.values((canary && canary.fails) || {}).some(n => n >= 3);
+  browser.browserAction.setBadgeText({ text: broken ? '!' : '' });
+  if (broken) browser.browserAction.setBadgeBackgroundColor({ color: '#ff3b30' });
+}
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes.ytfCanary) {
+    updateCanaryBadge(changes.ytfCanary.newValue);
+  }
+});
+
+browser.storage.local.get('ytfCanary').then(res => updateCanaryBadge(res.ytfCanary));
 
 // ── Timed pause: auto-resume when pausedUntil passes ──
 // The popup's "Pause for 10 min" sets { enabled:false, pausedUntil:ts }.

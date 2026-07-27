@@ -50,7 +50,16 @@ function installBrowserMock(win) {
           listeners.forEach(f => f(changes, 'sync'));
         },
       },
-      local: { async get() { return {}; } },
+      local: {
+        _s: {},
+        async get(k) {
+          if (k == null) return { ...this._s };
+          const out = {};
+          if (k in this._s) out[k] = this._s[k];
+          return out;
+        },
+        async set(obj) { Object.assign(this._s, obj); },
+      },
       onChanged: { addListener(f) { listeners.push(f); } },
     },
   };
@@ -167,6 +176,31 @@ async function testYouTube() {
       t('Ads toggle off: ad shown', !hidden(q('#masthead-ad')));
       t('Ads toggle off: sidebar STILL hidden', hidden(q('#secondary')));
       await browser.storage.sync.set({ blockAds: true });
+
+      // Per-page profiles: this fixture is a /watch page
+      await browser.storage.sync.set({ pageWatch: false });
+      t('watch profile off: sidebar restored', !hidden(q('#secondary')));
+      t('watch profile off: attr gates cleared',
+        !document.documentElement.hasAttribute('data-ytf-ads'));
+      t('watch profile off: master switch still on', true);
+      await browser.storage.sync.set({ pageWatch: true });
+      t('watch profile back on: sidebar hidden again', hidden(q('#secondary')));
+
+      // Selector canary: a missing structural element counts strikes,
+      // a found one resets them
+      document.querySelector('ytd-watch-metadata').remove();
+      await runCanaryCheck(); await runCanaryCheck(); await runCanaryCheck();
+      let canary = (await browser.storage.local.get('ytfCanary')).ytfCanary;
+      t('canary: missing element reaches 3 strikes',
+        canary && canary.fails['video metadata'] === 3);
+      t('canary: present elements carry no strikes',
+        canary && !canary.fails['player'] && !canary.fails['sidebar']);
+      const meta = document.createElement('ytd-watch-metadata');
+      document.body.appendChild(meta);
+      await runCanaryCheck();
+      canary = (await browser.storage.local.get('ytfCanary')).ytfCanary;
+      t('canary: element back -> strikes reset',
+        canary && canary.fails['video metadata'] === 0);
     })();
   `;
 
