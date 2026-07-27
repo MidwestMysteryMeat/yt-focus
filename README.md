@@ -154,8 +154,9 @@ broke" warnings.
 
 - Mobile selectors are fixture-tested but need live-device verification
   after YouTube mobile updates (marked beta above).
-- Text-matched rules (channel tabs, nav entries, shelf titles) assume
-  an English UI.
+- Text-matched rules cover ~13 locales via the `L10N` tables in
+  `defaults.js`; other languages fall back to the structural (href/
+  icon/element) signals, which cover most but not all rules.
 
 ## License
 
@@ -163,6 +164,15 @@ Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved 
 
 ## Changelog
 
+- **4.3** — Localization + mobile polish. New shared `L10N` word tables
+  (~13 locales) behind the few rules that must text-match: channel
+  tabs/shelf titles (Publicaciones, Beiträge, ストア…), left-nav
+  fallbacks, and Spotify ad detection (Anuncio, Werbung, Publicité,
+  Реклама, 広告… — regex avoids `\b` so CJK matches). Structural
+  signals (hrefs, icons, element names) remain primary and were always
+  locale-proof. Clickbait remover now also rewrites mobile titles and
+  swaps mobile thumbnails. 57-assertion suite incl. German Spotify ad
+  + Spanish channel-tab fixtures.
 - **4.2** — Firefox Android / m.youtube.com support (beta): `ytm-*`
   selector set for Shorts, comments, related, ads, chips, shelves,
   mixes, merch/posts, channel info, mute list and autoplay-off; mobile

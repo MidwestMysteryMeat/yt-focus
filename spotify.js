@@ -21,6 +21,14 @@ let currentSettings = { ...DEFAULTS };
 // C alone can false-positive for one poll while a track is still
 // loading (widget rendered, links not yet), so it must hold for two
 // consecutive polls before it counts.
+// Ad-word regexes built from the shared L10N table (defaults.js).
+// No trailing word-boundary anchor: it breaks on CJK words; instead require end-of-string,
+// whitespace or a separator after the match.
+const AD_WORDS = L10N.advertisement.join('|');
+const AD_TITLE_RE = new RegExp(
+  '^(?:spotify\s*[–—-]\s*)?(?:' + AD_WORDS + ')(?:$|\s|[·–—:-])', 'i');
+const AD_ARIA_RE = new RegExp('(?:' + AD_WORDS + '|advertiser)', 'i');
+
 const CONTENT_LINK = 'a[href*="/track/"],a[href*="/episode/"],a[href*="/album/"],a[href*="/show/"]';
 let linklessPolls = 0;
 
@@ -32,7 +40,7 @@ function adPlaying() {
   // "Spotify – Advertisement". A real track NAMED "Advertisement" produces
   // the same title shape — but a real track always has a content link in
   // the widget and an ad never does, so the link exonerates it.
-  if (/^(spotify\s*[–—-]\s*)?advertisement\b/i.test(document.title) && !hasContentLink) {
+  if (AD_TITLE_RE.test(document.title) && !hasContentLink) {
     return true;
   }
 
@@ -44,7 +52,7 @@ function adPlaying() {
   // "Now playing: Advertisement by X" AND a content link; a real ad never
   // has the link.
   if (!hasContentLink
-      && /advertisement|advertiser/i.test(widget.getAttribute('aria-label') || '')) {
+      && AD_ARIA_RE.test(widget.getAttribute('aria-label') || '')) {
     return true;
   }
 

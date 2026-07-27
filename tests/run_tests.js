@@ -91,6 +91,7 @@ async function testYouTube() {
         <div id="confirm-button"><button></button></div>
       </yt-confirm-dialog-renderer>
       <h3><a id="video-title">MY INSANE GTA 6 SPEEDRUN!! FBI SHOWED UP</a></h3>
+      <yt-tab-shape tab-title="Publicaciones"></yt-tab-shape>
     </ytd-app>
   </body></html>`;
 
@@ -157,6 +158,14 @@ async function testYouTube() {
       await browser.storage.sync.set({ hideOwner: true });
       t('hideOwner toggled on: owner hidden', hidden(q('ytd-watch-metadata #owner')));
       await browser.storage.sync.set({ hideOwner: false });
+
+      // Localized channel tab (Spanish "Posts") under minimalChannel
+      await browser.storage.sync.set({ minimalChannel: true });
+      t('Spanish "Publicaciones" tab hidden (L10N)',
+        hidden(q('yt-tab-shape[tab-title="Publicaciones"]')));
+      await browser.storage.sync.set({ minimalChannel: false });
+      t('minimalChannel off: tab restored',
+        !hidden(q('yt-tab-shape[tab-title="Publicaciones"]')));
 
       await browser.storage.sync.set({ deClickbait: false });
       t('clickbait off: original title restored',
@@ -355,6 +364,16 @@ async function testSpotify() {
       t('linkless widget 2nd poll: muted (localized ad)', audio.muted === true);
       song(); tick();
       t('localized ad over: unmuted', audio.muted === false);
+
+      // German UI: title "Werbung", linkless widget — the localized
+      // title word must mute on the FIRST poll (no 2-poll wait)
+      document.title = 'Werbung';
+      widget.setAttribute('aria-label', 'Werbung');
+      widget.innerHTML = '<div>MarkeX</div>';
+      tick();
+      t('German ad title "Werbung": muted on first poll', audio.muted === true);
+      song(); tick();
+      t('German ad over: unmuted', audio.muted === false);
 
       await browser.storage.sync.set({ enabled: false });
       t('master OFF: ad banner restored', slot.style.display !== 'none');

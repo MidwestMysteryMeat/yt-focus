@@ -43,6 +43,39 @@ const DEFAULTS = {
   muteList:         [],     // hide videos matching these words/channels
 };
 
+// ── Localized label tables ──
+// Structural signals (hrefs, icons, element names) are locale-proof and
+// always primary; these word lists only back the few rules that must
+// text-match. Lowercase; covers the top YouTube/Spotify locales.
+// "Shorts" is an unlocalized brand word nearly everywhere.
+const L10N = {
+  advertisement: [
+    'advertisement', 'anuncio', 'anúncio', 'publicité', 'publicidad',
+    'werbung', 'annuncio', 'advertentie', 'reklama', 'reklam',
+    'реклама', '広告', '광고', '广告', '廣告',
+  ],
+  forYou: [
+    'for you', 'para ti', 'para você', 'pour vous', 'pour toi',
+    'für dich', 'per te', 'voor jou', 'dla ciebie', 'senin için',
+    'для вас', 'あなたへ',
+  ],
+  posts: [
+    'posts', 'publicaciones', 'postagens', 'publications', 'beiträge',
+    'post', 'berichten', 'posty', 'gönderiler', 'посты', 'сообщения',
+    '投稿', '게시물',
+  ],
+  store: [
+    'store', 'tienda', 'loja', 'boutique', 'shop', 'negozio', 'winkel',
+    'sklep', 'mağaza', 'магазин', 'ストア', '스토어', '商店',
+  ],
+  subscriptions: [
+    'subscriptions', 'suscripciones', 'inscrições', 'abonnements',
+    'abos', 'iscrizioni', 'abonnementen', 'subskrypcje', 'abonelikler',
+    'подписки', '登録チャンネル', '구독',
+  ],
+  you: ['you', 'tú', 'você', 'vous', 'du', 'tu', 'jij', 'ty', 'sen', 'вы'],
+};
+
 // Settings live in storage.sync so Firefox Sync carries them across
 // devices (works locally too when sync is off).
 const STORE = browser.storage.sync;

@@ -196,15 +196,19 @@ const MUTE_ITEM_SELECTOR = [
 // Nav entry rules — single pass for both Shorts + LeftNav
 const NAV_RULES = [
   { key: 'blockShorts',  hrefs: ['/shorts'],                          texts: ['shorts'] },
-  { key: 'blockLeftNav', hrefs: ['/feed/subscriptions', '/feed/you'], texts: ['subscriptions', 'you'] },
+  { key: 'blockLeftNav', hrefs: ['/feed/subscriptions', '/feed/you'], texts: [...L10N.subscriptions, ...L10N.you] },
 ];
 const NAV_ENTRY_SELECTOR = 'ytd-guide-entry-renderer,ytd-mini-guide-entry-renderer,ytd-compact-link-renderer';
 
-// Channel page (minimalChannel): shelf titles to hide (text-matched)
-const BLOCKED_SHELF_TITLES = ['for you', 'official channels', 'channels', 'collaborations', 'posts'];
+// Channel page (minimalChannel): shelf titles to hide (text-matched,
+// localized via L10N; 'official channels'/'collaborations' are en-only)
+const BLOCKED_SHELF_TITLES = [
+  ...L10N.forYou, ...L10N.posts,
+  'official channels', 'channels', 'collaborations',
+];
 
-// Channel page (minimalChannel): tabs to hide
-const BLOCKED_TAB_LABELS = ['shorts', 'posts', 'store'];
+// Channel page (minimalChannel): tabs to hide (localized)
+const BLOCKED_TAB_LABELS = ['shorts', ...L10N.posts, ...L10N.store];
 
 let currentSettings = { ...DEFAULTS };
 
@@ -373,7 +377,7 @@ function smartSentenceCase(t) {
 function applyClickbait() {
   const active = activeHere() && currentSettings.deClickbait;
 
-  document.querySelectorAll('#video-title').forEach(el => {
+  document.querySelectorAll('#video-title, .media-item-headline').forEach(el => {
     if (active) {
       const t = el.textContent;
       const letters = t.replace(/[^A-Za-z]/g, '');
@@ -388,7 +392,7 @@ function applyClickbait() {
     }
   });
 
-  document.querySelectorAll('ytd-thumbnail img, yt-thumbnail-view-model img').forEach(img => {
+  document.querySelectorAll('ytd-thumbnail img, yt-thumbnail-view-model img, ytm-media-item img, ytm-video-with-context-renderer img').forEach(img => {
     if (active) {
       const m = (img.src || '').match(/i\.ytimg\.com\/vi(?:_webp)?\/([A-Za-z0-9_-]{6,})\//);
       if (!m) return;
