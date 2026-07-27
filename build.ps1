@@ -14,7 +14,7 @@ if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 $files = @(
     'manifest.json', 'defaults.js', 'background.js', 'content.js',
     'spotify.js', 'content.css', 'popup.html', 'popup.js',
-    'icons/icon48.png', 'icons/icon96.png', 'icons/donation-qr.png'
+    'icons/icon48.png', 'icons/icon96.png'
 )
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem

@@ -293,24 +293,6 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
     #kofi:hover { color: var(--text); border-color: var(--accent); }
-
-    /* ── Support / donation QR ── */
-    .support-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px 12px;
-      text-align: center;
-    }
-    .support-box img {
-      border-radius: 8px;
-      background: #fff;      /* QR needs light quiet zone in dark theme */
-      padding: 6px;
-    }
-    .support-box a { color: var(--muted); font-size: 11px; text-decoration: none; }
-    .support-box a:hover { color: var(--accent); }
-    .support-box p { font-size: 10px; color: var(--faint); line-height: 1.4; }
   </style>
 </head>
 <body>
@@ -523,15 +505,6 @@
   </div>
   <textarea id="backupBox" spellcheck="false" placeholder="Export fills this box (and copies to clipboard). Paste a backup here and hit Import to restore."></textarea>
 </div>
-
-<details data-section="support" data-nocount>
-  <summary><span class="sec-title">Support ☕</span><span class="sec-count"></span></summary>
-  <div class="support-box">
-    <img src="icons/donation-qr.png" alt="Donation QR code — scan to open Ko-fi" width="150" height="172"/>
-    <a id="kofiLink" href="https://ko-fi.com/midwestmysterymeat">ko-fi.com/midwestmysterymeat</a>
-    <p>Free forever. If YT Focus bought you back some attention, a coffee keeps it maintained.</p>
-  </div>
-</details>
 
 <footer>
   <span>v4.1</span>
