@@ -7,6 +7,7 @@ mutes ads on the Spotify web player.
 
 **Repo:** [github.com/MidwestMysteryMeat/yt-focus](https://github.com/MidwestMysteryMeat/yt-focus)
 · by [@MidwestMysteryMeat](https://github.com/MidwestMysteryMeat)
+· ☕ [Support on Ko-fi](https://ko-fi.com/midwestmysterymeat)
 
 ## Features
 

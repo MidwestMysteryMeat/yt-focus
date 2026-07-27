@@ -281,8 +281,18 @@
       color: var(--faint);
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-family: Consolas, monospace;
     }
+    #kofi {
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 2px 9px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    #kofi:hover { color: var(--text); border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -496,7 +506,11 @@
   <textarea id="backupBox" spellcheck="false" placeholder="Export fills this box (and copies to clipboard). Paste a backup here and hit Import to restore."></textarea>
 </div>
 
-<footer><span>v4.1</span><span>Alt+Shift+Y pauses</span></footer>
+<footer>
+  <span>v4.1</span>
+  <a id="kofi" href="https://ko-fi.com/midwestmysterymeat" title="Support YT Focus on Ko-fi">☕ Ko-fi</a>
+  <span>Alt+Shift+Y pauses</span>
+</footer>
 
 <script src="defaults.js"></script>
 <script src="popup.js"></script>
