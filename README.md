@@ -1,5 +1,11 @@
 # YT Focus
 
+
+<!-- wip-contact-banner -->
+> **Work in progress.** This is an active side project alongside my main game development, so progress is intermittent — expect bugs, missing features, and rough edges.
+>
+> Bug reports, feedback, or contributions are welcome via GitHub issues/PRs, or email **midwestmysterymeatstudios@gmail.com**. If you'd like to support the work, tips are appreciated but never expected.
+
 Firefox extension that strips the noise out of YouTube: Shorts, comments,
 recommendations, action bars, channel-page clutter — each behind a toggle
 in the toolbar popup, applied instantly to every open YouTube tab. Also
