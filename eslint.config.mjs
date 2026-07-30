@@ -9,9 +9,8 @@
 // silently skips files and reports "0 problems", which reads as success.
 //
 // Rules are listed explicitly rather than extending @eslint/js recommended, so
-// this config needs no extra dependency and cannot drift when a preset changes.
-// eslint itself is not pinned as a devDependency — `npm run lint` resolves
-// whatever npx finds. Pinning it is the right follow-up.
+// the selected rules cannot drift when a preset changes. The eslint executable
+// is pinned in package.json/package-lock.json so the gate is reproducible.
 
 const browserGlobals = {
     // WebExtension APIs

@@ -127,7 +127,8 @@ Load Temporary Add-on → pick `manifest.json`.
 
 ```powershell
 npm install   # once (jsdom)
-npm test      # runs the real content scripts in jsdom ad fixtures
+npm test      # 60 assertions over the real content scripts and jsdom fixtures
+npm run lint  # pinned eslint correctness gate; must report 0 errors
 ```
 
 The harness loads the unmodified extension scripts into DOM fixtures of
