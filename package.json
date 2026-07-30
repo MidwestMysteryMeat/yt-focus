@@ -1,6 +1,11 @@
 {
   "name": "yt-focus-dev",
   "private": true,
-  "scripts": { "test": "node tests/run_tests.js" },
-  "devDependencies": { "jsdom": "^25.0.1" }
+  "scripts": {
+    "test": "node tests/run_tests.js",
+    "lint": "npx --yes eslint ."
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.1"
+  }
 }

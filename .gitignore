@@ -3,3 +3,7 @@ dist/
 *.zip
 web-ext-artifacts/
 node_modules/
+
+# Python bytecode cache from icons/render_icons.py
+__pycache__/
+*.pyc
