@@ -160,7 +160,9 @@ broke" warnings.
 
 ## License
 
-Proprietary — [Ephemeral / Proprietary License](LICENSE) (All Rights Reserved with a Sharing Exception).
+Licensed under the **[Apache License 2.0](LICENSE)** — free to use, modify, fork and build on, commercially or not.
+
+**Credit is required.** Apache-2.0 §4(c)–(d) obliges you to keep the copyright notice and to reproduce [`NOTICE`](NOTICE) in anything you distribute, including binaries and hosted builds. Credit it as `yt-focus by MysteryMeat` (https://github.com/MidwestMysteryMeat/yt-focus) in your credits screen, About box, or docs. The project name and the MysteryMeat name are not licensed for endorsement or promotion (§6).
 
 ## Changelog
 
