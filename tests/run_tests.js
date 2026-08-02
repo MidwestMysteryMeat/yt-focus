@@ -363,6 +363,25 @@ async function testSpotify() {
       tick();
       t('song titled "Advertisement": NOT muted', audio.muted === false);
 
+      // The two suffixed/prefixed title shapes. aria is blanked and only
+      // ONE tick runs, so the title regex is the only signal that can
+      // mute — the linkless-widget fallback needs two polls.
+      document.title = 'Advertisement · Spotify';
+      widget.setAttribute('aria-label', '');
+      widget.innerHTML = '<div>SomeBrand</div>';
+      tick();
+      t('ad title "Advertisement · Spotify": muted (title signal alone)',
+        audio.muted === true);
+      song(); tick();
+      document.title = 'Spotify – Advertisement';
+      widget.setAttribute('aria-label', '');
+      widget.innerHTML = '<div>SomeBrand</div>';
+      tick();
+      t('ad title "Spotify – Advertisement": muted (title signal alone)',
+        audio.muted === true);
+      song(); tick();
+      t('title-shape ads over: unmuted', audio.muted === false);
+
       // Localized ad (no English strings anywhere): linkless widget must
       // hold for 2 polls — one poll (a track mid-load) must not mute.
       document.title = 'Spotify';
@@ -401,10 +420,69 @@ async function testSpotify() {
   win.close();
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Background (strict-off countdown survives popup close)
+// ─────────────────────────────────────────────────────────────────────────
+async function testBackground() {
+  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
+    url: 'https://example.invalid/',
+    runScripts: 'outside-only',
+  });
+  const win = dom.window;
+  installBrowserMock(win);
+  // Background-page APIs the script wires up but this test doesn't drive.
+  win.browser.commands = { onCommand: { addListener() {} } };
+  win.browser.contextMenus = { create() {}, onClicked: { addListener() {} } };
+  win.browser.browserAction = { setBadgeText() {}, setBadgeBackgroundColor() {} };
+
+  const probe = `
+    window.__done = (async () => {
+      const R = window.__results = [];
+      const t = (name, cond, detail) => R.push({ name, pass: !!cond, detail });
+      await new Promise(r => setTimeout(r, 20));   // let startup reads settle
+
+      // The popup's only job is writing the deadline; it "closes" right
+      // after (no popup code runs). The background must finish the job.
+      await browser.storage.sync.set({ strictOff: true, strictOffAt: Date.now() + 80 });
+      let s = await loadSettings();
+      t('strict-off pending: still enabled', s.enabled === true);
+      await new Promise(r => setTimeout(r, 160));
+      s = await loadSettings();
+      t('deadline passed with popup closed: background turned it off',
+        s.enabled === false);
+      t('deadline cleared after firing', s.strictOffAt === 0);
+
+      // Cancel path: clearing the deadline before it fires keeps it on.
+      await browser.storage.sync.set({ enabled: true, strictOffAt: Date.now() + 80 });
+      await browser.storage.sync.set({ strictOffAt: 0 });
+      await new Promise(r => setTimeout(r, 160));
+      s = await loadSettings();
+      t('cancelled countdown: stays enabled', s.enabled === true);
+
+      // A timed pause set mid-countdown must survive the deadline firing
+      // (the background must not stomp pausedUntil with a hard off).
+      const resumeAt = Date.now() + 60 * 1000;
+      await browser.storage.sync.set({ strictOffAt: Date.now() + 40 });
+      await browser.storage.sync.set({ enabled: false, pausedUntil: resumeAt });
+      await new Promise(r => setTimeout(r, 120));
+      s = await loadSettings();
+      t('timed pause during countdown: pausedUntil preserved',
+        s.pausedUntil === resumeAt, 'pausedUntil=' + s.pausedUntil);
+      t('stale deadline still cleared', s.strictOffAt === 0);
+    })();
+  `;
+
+  win.eval(src('defaults.js') + '\n' + src('background.js') + '\n' + probe);
+  await win.__done;
+  report(win.__results, 'Background (background.js strict-off)');
+  win.close();
+}
+
 (async () => {
   await testYouTube();
   await testYouTubeMobile();
   await testSpotify();
+  await testBackground();
   console.log('\nPASS ' + PASS + '  FAIL ' + FAIL);
   process.exit(FAIL ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

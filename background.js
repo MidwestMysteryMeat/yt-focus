@@ -82,6 +82,44 @@ loadSettings().then(settings => {
   if (settings.pausedUntil) schedulePauseCheck(settings.pausedUntil);
 });
 
+// ── Slow off-switch: complete the countdown even if the popup closes ──
+// The popup only writes strictOffAt (epoch ms) and displays the countdown;
+// the turn-off itself happens HERE, so closing the popup mid-countdown
+// can't silently cancel an announced turn-off. Clearing strictOffAt (a
+// second click in the popup) cancels the pending turn-off.
+let strictOffTimer = null;
+
+async function fireStrictOff() {
+  const settings = await loadSettings();
+  if (!settings.strictOffAt) return;             // already cancelled
+  if (settings.enabled) {
+    await STORE.set({ enabled: false, pausedUntil: 0, strictOffAt: 0 });
+  } else {
+    // Something else (timed pause, another window) already turned it off —
+    // don't stomp its pausedUntil, just clear the stale deadline.
+    await STORE.set({ strictOffAt: 0 });
+  }
+}
+
+function scheduleStrictOff(at) {
+  clearTimeout(strictOffTimer);
+  strictOffTimer = null;
+  if (!at) return;
+  const delay = at - Date.now();
+  if (delay <= 0) { fireStrictOff(); return; }
+  strictOffTimer = setTimeout(fireStrictOff, delay);
+}
+
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync' || !('strictOffAt' in changes)) return;
+  scheduleStrictOff(changes.strictOffAt.newValue || 0);
+});
+
+// Startup: a deadline that passed while the browser was closed fires now.
+loadSettings().then(settings => {
+  if (settings.strictOffAt) scheduleStrictOff(settings.strictOffAt);
+});
+
 // ── Right-click a channel link → add it to the mute list ──
 browser.contextMenus.create({
   id: 'ytf-mute-channel',

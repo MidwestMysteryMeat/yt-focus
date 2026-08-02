@@ -40,6 +40,7 @@ const DEFAULTS = {
   scheduleEnd:      '17:00',
   scheduleDays:     [1, 2, 3, 4, 5],  // getDay() values; Mon–Fri
   strictOff:        false,  // slow off-switch: 10s countdown to turn off
+  strictOffAt:      0,      // epoch ms; background completes a pending slow-off then (0 = none)
   muteList:         [],     // hide videos matching these words/channels
 };
 

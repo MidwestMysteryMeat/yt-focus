@@ -25,8 +25,10 @@ let currentSettings = { ...DEFAULTS };
 // No trailing word-boundary anchor: it breaks on CJK words; instead require end-of-string,
 // whitespace or a separator after the match.
 const AD_WORDS = L10N.advertisement.join('|');
+// Double-escaped: in a plain string literal '\s' collapses to 's' and the
+// pattern silently stops matching anything but a bare ad word.
 const AD_TITLE_RE = new RegExp(
-  '^(?:spotify\s*[–—-]\s*)?(?:' + AD_WORDS + ')(?:$|\s|[·–—:-])', 'i');
+  '^(?:spotify\\s*[–—-]\\s*)?(?:' + AD_WORDS + ')(?:$|\\s|[·–—:-])', 'i');
 const AD_ARIA_RE = new RegExp('(?:' + AD_WORDS + '|advertiser)', 'i');
 
 const CONTENT_LINK = 'a[href*="/track/"],a[href*="/episode/"],a[href*="/album/"],a[href*="/show/"]';

@@ -86,6 +86,10 @@ function loadIntoUI(settings) {
   renderDays();
   renderMuteList();
   updateStatus();
+  // Popup (re)opened or storage changed mid-countdown: show the live
+  // countdown the background is running; drop the ticker once it's over.
+  if (offPending()) startOffTicker();
+  else if (offTicker) { clearInterval(offTicker); offTicker = null; }
 }
 
 loadSettings().then(loadIntoUI);
@@ -107,22 +111,39 @@ browser.storage.onChanged.addListener(async (changes, area) => {
 // ── Master switch ──
 // A manual flip cancels a pending timed pause. During focus hours,
 // turning off is refused. With the slow off-switch on, turning off
-// starts a 10 s countdown; a second click cancels it.
-let offTimer = null;
-let offLeft = 0;
+// writes strictOffAt (a deadline) to storage; the BACKGROUND page
+// performs the actual turn-off when it passes, so closing the popup
+// mid-countdown can't cancel it. This popup only displays the countdown;
+// a second click cancels by clearing strictOffAt.
+let offTicker = null;
 
-function cancelOffCountdown() {
-  clearInterval(offTimer);
-  offTimer = null;
-  updateStatus();
+function offPending() {
+  return (current.strictOffAt || 0) > Date.now();
+}
+
+function renderOffCountdown() {
+  if (!offPending()) {      // background fired (or countdown cancelled)
+    clearInterval(offTicker);
+    offTicker = null;
+    updateStatus();
+    return;
+  }
+  const left = Math.ceil((current.strictOffAt - Date.now()) / 1000);
+  updateStatus('Turning off in ' + left + ' s — click again to cancel');
+}
+
+function startOffTicker() {
+  if (!offTicker) offTicker = setInterval(renderOffCountdown, 250);
+  renderOffCountdown();
 }
 
 document.getElementById('enabled').addEventListener('change', (e) => {
   const box = e.target;
 
-  if (offTimer) {           // countdown running — this click cancels it
+  if (offPending()) {       // countdown running — this click cancels it
     box.checked = true;
-    cancelOffCountdown();
+    current.strictOffAt = 0;
+    STORE.set({ strictOffAt: 0 });
     updateStatus('Kept on.');
     return;
   }
@@ -134,22 +155,10 @@ document.getElementById('enabled').addEventListener('change', (e) => {
   }
 
   if (!box.checked && current.strictOff) {
-    box.checked = true;     // stays on until the countdown finishes
-    offLeft = 10;
-    updateStatus('Turning off in ' + offLeft + ' s — click again to cancel');
-    offTimer = setInterval(() => {
-      offLeft--;
-      if (offLeft > 0) {
-        updateStatus('Turning off in ' + offLeft + ' s — click again to cancel');
-        return;
-      }
-      cancelOffCountdown();
-      box.checked = false;
-      current.enabled = false;
-      current.pausedUntil = 0;
-      STORE.set({ enabled: false, pausedUntil: 0 });
-      updateStatus();
-    }, 1000);
+    box.checked = true;     // stays on until the background turns it off
+    current.strictOffAt = Date.now() + 10 * 1000;
+    STORE.set({ strictOffAt: current.strictOffAt });
+    startOffTicker();
     return;
   }
 
@@ -285,6 +294,7 @@ const backupBox = document.getElementById('backupBox');
 document.getElementById('exportBtn').addEventListener('click', async () => {
   const settings = await loadSettings();
   delete settings.pausedUntil;   // transient state, not a preference
+  delete settings.strictOffAt;
   backupBox.value = JSON.stringify(settings, null, 2);
   backupBox.select();
   try { await navigator.clipboard.writeText(backupBox.value); } catch {}
@@ -301,7 +311,7 @@ document.getElementById('importBtn').addEventListener('click', async () => {
   // Only accept known keys with the right types
   const clean = {};
   for (const key of Object.keys(DEFAULTS)) {
-    if (!(key in parsed) || key === 'pausedUntil') continue;
+    if (!(key in parsed) || key === 'pausedUntil' || key === 'strictOffAt') continue;
     const kind = typeof DEFAULTS[key];
     if ((kind === 'boolean' || kind === 'number' || kind === 'string')
         && typeof parsed[key] === kind) {
